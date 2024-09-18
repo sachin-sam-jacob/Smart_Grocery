@@ -1,0 +1,79 @@
+/* styles.css */
+
+/* body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+} */
+
+.containers {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    margin-top: 10%;
+    font-family: "Lato", sans-serif;
+
+    
+}
+
+.head{
+    text-align: center;
+    color: #333;
+}
+
+.emailid {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.resetpass{
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+
+}
+
+.cancel{
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.resetpass:hover {
+    background-color: #0056b3;
+}
+
+.cancel {
+    background-color: #6c757d;
+}
+
+.cancel:hover {
+    background-color: #5a6268;
+}
+
+p {
+    color: red;
+    text-align: center;
+}
