@@ -8,7 +8,7 @@ import { IoMdEye } from "react-icons/io";
 import { IoMdEyeOff } from "react-icons/io";
 import Button from '@mui/material/Button';
 import { Link } from "react-router-dom";
-
+import MainLogo from '../../assets/images/MainLogo.png';
 import googleIcon from '../../assets/images/googleIcon.png';
 import { useNavigate } from 'react-router-dom';
 import { postData } from '../../utils/api';
@@ -247,8 +247,8 @@ const Login = () => {
             <section className="loginSection">
                 <div className="loginBox">
                     <div className='logo text-center'>
-                        <img src={Logo} width="60px" />
-                        <h5 className='font-weight-bold'>Login to Hotash</h5>
+                        <img style={{width:'150px',height:'60px',marginRight:'30px'}} src={MainLogo} width="60px" />
+                        <h5 className='font-weight-bold'>Login</h5>
                     </div>
 
                     <div className='wrapper mt-3 card border'>

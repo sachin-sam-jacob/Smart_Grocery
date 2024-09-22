@@ -13,7 +13,7 @@ import { IoShieldCheckmarkSharp } from "react-icons/io5";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { FaPhoneAlt } from "react-icons/fa";
-
+import MainLogo from '../../assets/images/MainLogo.png';
 import googleIcon from '../../assets/images/googleIcon.png';
 import { IoMdHome } from "react-icons/io";
 import { postData } from '../../utils/api';
@@ -250,8 +250,8 @@ const SignUp = () => {
 
                 <div className='row'>
                     <div className='col-md-8 d-flex align-items-center flex-column part1 justify-content-center'>
-                        <h1>BEST UX/UI FASHION <span className='text-sky'>ECOMMERCE DASHBOARD</span> & ADMIN PANEL</h1>
-                        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</p>
+                        <h1>WELCOME TO  <span className='text-sky'>SMART GROCERY</span> ADMIN PANEL</h1>
+                        {/* <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</p> */}
 
                         <div className='w-100 mt-4'>
                             <Link to={'/'}> <Button className="btn-blue btn-lg btn-big"><IoMdHome /> Go To Home</Button></Link>
@@ -262,7 +262,7 @@ const SignUp = () => {
                     <div className='col-md-4 pr-0'>
                         <div className="loginBox">
                             <div className='logo text-center'>
-                                <img src={Logo} width="60px" />
+                                <img style={{width:'130px',height:'50px'}} src={MainLogo} width="60px" />
                                 <h5 className='font-weight-bold'>Register a new account</h5>
                             </div>
 
