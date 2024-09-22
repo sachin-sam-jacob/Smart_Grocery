@@ -410,7 +410,7 @@ const ProductDetails = () => {
                             }
 
 
-                            {
+                            {/* {
                                 activeTabs === 1 &&
 
                                 <div className='tabContent'>
@@ -506,7 +506,7 @@ const ProductDetails = () => {
                                     </div>
                                 </div>
 
-                            }
+                            } */}
 
 
 
