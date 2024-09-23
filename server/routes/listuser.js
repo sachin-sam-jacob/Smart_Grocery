@@ -4,9 +4,11 @@ const User = require('../models/user');
 const router = express.Router();
 
 // 1. Fetch all users
-router.get('/users', async (req, res) => {
+router.get(`/`, async (req, res) => {
     try {
-        const users = await User.find({});
+        console.log("Entered routes");
+        const users = await User.find();
+        console.log(users);
         res.status(200).json(users);
     } catch (err) {
         res.status(500).json({ message: "Server error while fetching users." });

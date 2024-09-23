@@ -135,7 +135,7 @@ const Sidebar = () => {
                         </Button>
                         <div className={`submenuWrapper ${activeTab === 5 && isToggleSubmenu === true ? 'colapse' : 'colapsed'}`}>
                             <ul className='submenu'>
-                                <li><NavLink exact activeClassName='is-active' to="/homeBannerSlide/add">List Users</NavLink></li>
+                                <li><NavLink exact activeClassName='is-active' to="/user/list">List Users</NavLink></li>
                                 <li><NavLink exact activeClassName='is-active' to="/homeBannerSlide/list">Blocked Users</NavLink></li>
                             </ul>
                         </div>
