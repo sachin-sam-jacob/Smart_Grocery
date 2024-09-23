@@ -25,7 +25,7 @@ import  HomeBannerSlideList from './pages/HomeBanner/homeSlideList';
 import  EditHomeBannerSlide from './pages/HomeBanner/editSlide';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-
+import UserList from './pages/User/listuser';
 import LoadingBar from 'react-top-loading-bar'
 import { fetchDataFromApi } from './utils/api';
 
@@ -213,6 +213,7 @@ function App() {
               <Route path="/homeBannerSlide/add" exact={true} element={<AddHomeBannerSlide />} />
               <Route path="/homeBannerSlide/list" exact={true} element={<HomeBannerSlideList />} />
               <Route path="/homeBannerSlide/edit/:id" exact={true} element={<EditHomeBannerSlide />} />
+              <Route path="/user/list" exact={true} element={<UserList />} />
             </Routes>
           </div>
         </div>

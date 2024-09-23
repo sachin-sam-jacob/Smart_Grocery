@@ -268,7 +268,7 @@ const ProductDetails = () => {
 
 
 
-                            <p className="mt-3">Rs: {productData?.description}
+                            <p className="mt-3"> {productData?.description}
                             </p>
 
 
