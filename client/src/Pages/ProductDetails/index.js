@@ -103,30 +103,30 @@ const ProductDetails = () => {
     }
 
     const addReview = (e) => {
-        e.preventDefault();
+        // e.preventDefault();
 
-        const user = JSON.parse(localStorage.getItem("user"));
+        // const user = JSON.parse(localStorage.getItem("user"));
 
-        reviews.customerName = user?.name;
-        reviews.customerId = user?.userId;
-        reviews.productId = id
+        // reviews.customerName = user?.name;
+        // reviews.customerId = user?.userId;
+        // reviews.productId = id
 
-        setIsLoading(true);
+        // setIsLoading(true);
 
-        postData("/api/productReviews/add", reviews).then((res) => {
-            setIsLoading(false);
+        // postData("/api/productReviews/add", reviews).then((res) => {
+        //     setIsLoading(false);
 
-            reviews.customerRating = 1;
+        //     reviews.customerRating = 1;
 
-            setReviews({
-                review: "",
-                customerRating: 1
-            })
+        //     setReviews({
+        //         review: "",
+        //         customerRating: 1
+        //     })
 
-            fetchDataFromApi(`/api/productReviews?productId=${id}`).then((res) => {
-                setreviewsData(res);
-            })
-        })
+        //     fetchDataFromApi(`/api/productReviews?productId=${id}`).then((res) => {
+        //         setreviewsData(res);
+        //     })
+        // })
 
     }
 

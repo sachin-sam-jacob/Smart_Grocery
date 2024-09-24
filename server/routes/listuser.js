@@ -1,18 +1,22 @@
 // routes/userRoutes.js
 const express = require('express');
-const User = require('../models/user');
+const  { User } = require('../models/user');
+const { HomeBanner } = require('../models/homeBanner');
 const router = express.Router();
 
 // 1. Fetch all users
 router.get(`/`, async (req, res) => {
     try {
-        console.log("Entered routes");
         const users = await User.find();
-        console.log(users);
-        res.status(200).json(users);
-    } catch (err) {
-        res.status(500).json({ message: "Server error while fetching users." });
+        if (!users) {
+            res.status(500).json({ success: false })
+        }
+        return res.status(200).json(users);
+
+    } catch (error) {
+        res.status(500).json({ success: false })
     }
+
 });
 
 // // 2. View details of a specific user
