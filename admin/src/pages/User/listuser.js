@@ -96,8 +96,18 @@ const UserList = () => {
                                                 <td>
                                                     <div className="actions d-flex align-items-center">
                                                         <Link to={`/user/details/${user.id}`}>
-                                                            <Button className="success" color="primary">
-                                                                <FaEye /> View
+                                                        <Button
+                                                                variant="contained"
+                                                                color="primary"
+                                                                size="medium"
+                                                                style={{
+                                                                    textTransform: 'none', // To disable uppercase text
+                                                                    display: 'flex', // Flexbox for alignment
+                                                                    alignItems: 'center', // Center the content
+                                                                    padding: '10px 20px', // Adjust padding
+                                                                }}
+                                                            >
+                                                                 View
                                                             </Button>
                                                         </Link>
                                                     </div>

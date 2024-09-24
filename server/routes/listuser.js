@@ -20,17 +20,18 @@ router.get(`/`, async (req, res) => {
 });
 
 // // 2. View details of a specific user
-// router.get('/users/:id', async (req, res) => {
-//     try {
-//         const user = await User.findById(req.params.id);
-//         if (!user) {
-//             return res.status(404).json({ message: "User not found" });
-//         }
-//         res.status(200).json(user);
-//     } catch (err) {
-//         res.status(500).json({ message: "Server error while fetching user details." });
-//     }
-// });
+router.get('/:id', async (req, res) => {
+    console.log("entered");
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({ message: "Server error while fetching user details." });
+    }
+});
 
 // // 3. Block or unblock a user
 // router.put('/users/:id/block', async (req, res) => {

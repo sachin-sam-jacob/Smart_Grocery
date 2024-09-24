@@ -28,7 +28,7 @@ import Alert from '@mui/material/Alert';
 import UserList from './pages/User/listuser';
 import LoadingBar from 'react-top-loading-bar'
 import { fetchDataFromApi } from './utils/api';
-
+import UserDetails from './pages/User/UserDetails';
 import axios from 'axios';
 
 
@@ -214,6 +214,7 @@ function App() {
               <Route path="/homeBannerSlide/list" exact={true} element={<HomeBannerSlideList />} />
               <Route path="/homeBannerSlide/edit/:id" exact={true} element={<EditHomeBannerSlide />} />
               <Route path="/user/list" exact={true} element={<UserList />} />
+              <Route path="/user/details/:id" element={<UserDetails />} /> 
             </Routes>
           </div>
         </div>
