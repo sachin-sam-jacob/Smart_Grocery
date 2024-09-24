@@ -32,7 +32,6 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
 });
 
 const UserList = () => {
-    console.log("Entered user list");
     const [userList, setUserList] = useState([]);
     const context = useContext(MyContext);
 
@@ -41,7 +40,6 @@ const UserList = () => {
         context.setProgress(20)
         fetchDataFromApi('/api/listusers').then((res) => {
             setUserList(res);
-            console.log(res);
             context.setProgress(100);
         })
 
