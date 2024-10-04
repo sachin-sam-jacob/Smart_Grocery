@@ -9,7 +9,7 @@ import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Chip from '@mui/material/Chip';
 import HomeIcon from '@mui/icons-material/Home';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { fetchDataFromApi, postData, updateData } from "../../utils/api";
+import { fetchDataFromApi, updateData } from "../../utils/api";
 
 // Breadcrumb styling
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
@@ -37,14 +37,41 @@ const UserList = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        context.setProgress(20)
+        context.setProgress(20);
         fetchDataFromApi('/api/listusers').then((res) => {
             setUserList(res);
             context.setProgress(100);
-        })
-
+        });
     }, []);
 
+    const toggleBlockStatus = (user) => {
+        const updatedStatus = !user.isBlocked; // Toggle the isBlocked status
+
+        // Call backend to update the user's block status
+        updateData(`/api/listusers/${user.id}/block`, { isBlocked: updatedStatus }).then((res) => {
+            if (!res.error) {
+                // Update user list after success
+                const updatedUserList = userList.map((u) => {
+                    if (u.id === user.id) {
+                        return { ...u, isBlocked: updatedStatus };
+                    }
+                    return u;
+                });
+                setUserList(updatedUserList);
+                context.setAlertBox({
+                    open: true,
+                    error: false,
+                    msg: updatedStatus ? "User blocked successfully!" : "User unblocked successfully!",
+                });
+            } else {
+                context.setAlertBox({
+                    open: true,
+                    error: true,
+                    msg: "Error updating user status.",
+                });
+            }
+        });
+    };
 
     return (
         <>
@@ -96,20 +123,31 @@ const UserList = () => {
                                                 <td>
                                                     <div className="actions d-flex align-items-center">
                                                         <Link to={`/user/details/${user.id}`}>
-                                                        <Button
+                                                            <Button
                                                                 variant="contained"
                                                                 color="primary"
                                                                 size="medium"
                                                                 style={{
-                                                                    textTransform: 'none', // To disable uppercase text
-                                                                    display: 'flex', // Flexbox for alignment
-                                                                    alignItems: 'center', // Center the content
-                                                                    padding: '10px 20px', // Adjust padding
-                                                                }}
+                                                                    textTransform: 'none',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    padding: '10px 30px',
+                                                                        }}
                                                             >
-                                                                 View
+                                                                View
                                                             </Button>
                                                         </Link>
+                                                        <Button
+                                                            variant="contained"
+                                                            color={user.isBlocked ? 'success' : 'error'}
+                                                            size="medium"
+                                                            style={{ marginLeft: '30px',
+                                                                padding: '10px 40px'
+                                                             }}
+                                                            onClick={() => toggleBlockStatus(user)}
+                                                        >
+                                                            {user.isBlocked ? 'Unblock' : 'Block'}
+                                                        </Button>
                                                     </div>
                                                 </td>
                                             </tr>

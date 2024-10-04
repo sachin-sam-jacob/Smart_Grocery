@@ -51,4 +51,23 @@ router.get('/:id', async (req, res) => {
 //     }
 // });
 
+router.put('/:id/block', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { isBlocked } = req.body; // Expect the new `isBlocked` status in the request body
+
+        // Find the user by ID and update the isBlocked status
+        const user = await User.findByIdAndUpdate(userId, { isBlocked: isBlocked }, { new: true });
+
+        if (!user) {
+            return res.status(404).json({ error: true, msg: "User not found" });
+        }
+
+        res.json({ error: false, msg: `User has been ${isBlocked ? 'blocked' : 'unblocked'} successfully`, user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, msg: "An error occurred while updating user status" });
+    }
+});
+
 module.exports = router;
