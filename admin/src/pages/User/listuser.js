@@ -1,5 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 import { FaEye } from "react-icons/fa";
 import { MdBlock } from "react-icons/md";
 import { MyContext } from "../../App";
@@ -33,6 +38,9 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
 
 const UserList = () => {
     const [userList, setUserList] = useState([]);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [blockReason, setBlockReason] = useState("");
     const context = useContext(MyContext);
 
     useEffect(() => {
@@ -44,16 +52,29 @@ const UserList = () => {
         });
     }, []);
 
-    const toggleBlockStatus = (user) => {
-        const updatedStatus = !user.isBlocked; // Toggle the isBlocked status
+    const handleOpenDialog = (user) => {
+        setSelectedUser(user);
+        setOpenDialog(true);
+    };
 
-        // Call backend to update the user's block status
-        updateData(`/api/listusers/${user.id}/block`, { isBlocked: updatedStatus }).then((res) => {
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setBlockReason("");
+    };
+
+    const handleBlockUser = () => {
+        if (blockReason.trim() === "") {
+            alert("Please provide a reason for blocking the user.");
+            return;
+        }
+        const updatedStatus = true; // Block the user
+
+        // Call backend to update the user's block status and reason
+        updateData(`/api/listusers/${selectedUser.id}/block`, { isBlocked: updatedStatus, reason: blockReason }).then((res) => {
             if (!res.error) {
-                // Update user list after success
                 const updatedUserList = userList.map((u) => {
-                    if (u.id === user.id) {
-                        return { ...u, isBlocked: updatedStatus };
+                    if (u.id === selectedUser.id) {
+                        return { ...u, isBlocked: updatedStatus, reason: blockReason };
                     }
                     return u;
                 });
@@ -61,8 +82,9 @@ const UserList = () => {
                 context.setAlertBox({
                     open: true,
                     error: false,
-                    msg: updatedStatus ? "User blocked successfully!" : "User unblocked successfully!",
+                    msg: "User blocked successfully!",
                 });
+                handleCloseDialog();
             } else {
                 context.setAlertBox({
                     open: true,
@@ -132,22 +154,22 @@ const UserList = () => {
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     padding: '10px 30px',
-                                                                        }}
+                                                                }}
                                                             >
                                                                 View
                                                             </Button>
                                                         </Link>
-                                                        <Button
-                                                            variant="contained"
-                                                            color={user.isBlocked ? 'success' : 'error'}
-                                                            size="medium"
-                                                            style={{ marginLeft: '30px',
-                                                                padding: '10px 40px'
-                                                             }}
-                                                            onClick={() => toggleBlockStatus(user)}
-                                                        >
-                                                            {user.isBlocked ? 'Unblock' : 'Block'}
-                                                        </Button>
+                                                        {!user.isBlocked && (
+                                                            <Button
+                                                                variant="contained"
+                                                                color="error"
+                                                                size="medium"
+                                                                style={{ marginLeft: '30px', padding: '10px 40px' }}
+                                                                onClick={() => handleOpenDialog(user)}
+                                                            >
+                                                                Block
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -165,6 +187,30 @@ const UserList = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Block User Reason Dialog */}
+            <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>Block User</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Reason for Blocking"
+                        type="text"
+                        fullWidth
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleBlockUser} color="error">
+                        Block User
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

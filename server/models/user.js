@@ -31,6 +31,10 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    reason: {
+        type: String,
+        default: ''
+    },
     resetCode: {
         type: String,
         default: ''

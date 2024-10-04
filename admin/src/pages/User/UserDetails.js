@@ -34,24 +34,32 @@ const UserDetails = () => {
                     <p><strong>Username:</strong> {user.name}</p>
                     <p><strong>Email:</strong> {user.email}</p>
                     <p><strong>Status:</strong> {user.isBlocked ? 'Blocked' : 'Active'}</p>
-                    <Link to="/user/list"> <button 
+
+                    {/* Conditionally display the reason if the user is blocked */}
+                    {user.isBlocked && user.reason && (
+                        <p><strong>Block Reason:</strong> {user.reason}</p>
+                    )}
+                    
+                    <Link to="/user/list"> 
+                        <button 
                             type="button" 
                             style={{
                                 backgroundColor: 'blue', 
-                                border: 'none', // Remove border
-                                color: 'white', // White text
-                                padding: '10px 20px', // Padding
-                                textAlign: 'center', // Center text
-                                textDecoration: 'none', // Remove underline
-                                display: 'inline-block', // Keep inline
-                                fontSize: '16px', // Text size
-                                margin: '10px 0', // Margin around button
-                                cursor: 'pointer', // Pointer on hover
-                                borderRadius: '4px' // Rounded corners
+                                border: 'none',
+                                color: 'white',
+                                padding: '10px 20px',
+                                textAlign: 'center',
+                                textDecoration: 'none',
+                                display: 'inline-block',
+                                fontSize: '16px',
+                                margin: '10px 0',
+                                cursor: 'pointer',
+                                borderRadius: '4px'
                             }}
                         >
                             BACK
-                        </button></Link>
+                        </button>
+                    </Link>
                 </div>
             ) : (
                 <div>No user details found</div>

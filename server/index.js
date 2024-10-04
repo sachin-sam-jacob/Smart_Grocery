@@ -32,7 +32,7 @@ const forgotpass = require('./routes/Forgotpassword.js');
 const resetPassword = require('./routes/reset.js');
 const verifycode = require('./routes/verifycode.js');
 const listusers = require('./routes/listuser.js');
-
+const blockedUsers = require('./routes/blocked.js');
 
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
@@ -52,6 +52,7 @@ app.use(`/api/homeBanner`, homeBannerSchema);
 app.use(`/api/search`, searchRoutes);
 app.use('/api/forgotpassword', forgotpass);
 app.use(`/api/listusers`,listusers);
+app.use(`/api/blocked`, blockedUsers);
 
 
 //Database
