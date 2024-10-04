@@ -2,97 +2,81 @@ const { MyList } = require('../models/myList');
 const express = require('express');
 const router = express.Router();
 
-
+// Get all items in the wishlist
 router.get(`/`, async (req, res) => {
-
     try {
-
         const myList = await MyList.find(req.query);
 
         if (!myList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false, message: 'No items found' });
         }
 
         return res.status(200).json(myList);
-
     } catch (error) {
-        res.status(500).json({ success: false })
+        console.error("Error fetching wishlist:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
-
-
+// Add item to the wishlist
 router.post('/add', async (req, res) => {
+    try {
+        const { productId, userId, productTitle, image, rating, price } = req.body;
+        const itemExists = await MyList.findOne({ productId, userId });
 
-    const item = await MyList.find({productId:req.body.productId, userId: req.body.userId});
-
-    if(item.length===0){
-        let list = new MyList({
-            productTitle: req.body.productTitle,
-            image: req.body.image,
-            rating: req.body.rating,
-            price: req.body.price,
-            productId: req.body.productId,
-            userId: req.body.userId
-        });
-    
-    
-    
-        if (!list) {
-            res.status(500).json({
-                error: err,
-                success: false
-            })
+        if (itemExists) {
+            return res.status(409).json({ success: false, message: "Product already added to My List" });
         }
-    
-    
-        list = await list.save();
-    
-        res.status(201).json(list);
-    }else{
-        res.status(401).json({status:false,msg:"Product already added in the My List"})
+
+        const list = new MyList({
+            productTitle,
+            image,
+            rating,
+            price,
+            productId,
+            userId,
+        });
+
+        const savedItem = await list.save();
+        res.status(201).json(savedItem);
+    } catch (error) {
+        console.error("Error adding to wishlist:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-
-   
-
 });
 
-
+// Delete item from the wishlist
 router.delete('/:id', async (req, res) => {
+    try {
+        const item = await MyList.findById(req.params.id);
+        if (!item) {
+            return res.status(404).json({ success: false, message: "The item with the given ID was not found!" });
+        }
 
-    const item = await MyList.findById(req.params.id);
+        const deletedItem = await MyList.findByIdAndDelete(req.params.id);
+        if (!deletedItem) {
+            return res.status(404).json({ success: false, message: 'Item not found!' });
+        }
 
-    if (!item) {
-        res.status(404).json({ msg: "The item given id is not found!" })
+        res.status(200).json({ success: true, message: 'Item Deleted!' });
+    } catch (error) {
+        console.error("Error deleting item from wishlist:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-
-    const deletedItem = await MyList.findByIdAndDelete(req.params.id);
-
-    if (!deletedItem) {
-        res.status(404).json({
-            message: 'item not found!',
-            success: false
-        })
-    }
-
-    res.status(200).json({
-        success: true,
-        message: 'Item Deleted!'
-    })
 });
 
-
-
+// Get a specific item in the wishlist by ID
 router.get('/:id', async (req, res) => {
-
-    const item = await MyList.findById(req.params.id);
-
-    if (!item) {
-        res.status(500).json({ message: 'The item with the given ID was not found.' })
+    try {
+        const item = await MyList.findById(req.params.id);
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'The item with the given ID was not found.' });
+        }
+        return res.status(200).json(item);
+    } catch (error) {
+        console.error("Error fetching item:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-    return res.status(200).send(item);
-})
-
+});
 
 module.exports = router;
-

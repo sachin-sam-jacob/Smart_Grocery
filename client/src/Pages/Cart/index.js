@@ -84,7 +84,7 @@ const Cart = () => {
             context.setAlertBox({
                 open: true,
                 error: false,
-                msg: "item removed from cart!"
+                msg: "item removed from cart and added to Wishlist!"
             })
 
             const user = JSON.parse(localStorage.getItem("user"));
@@ -185,7 +185,7 @@ const Cart = () => {
 
                                         <div className="d-flex align-items-center mb-3">
                                             <span>Estimate for</span>
-                                            <span className="ml-auto"><b>United Kingdom</b></span>
+                                            <span className="ml-auto"><b>iNDIA</b></span>
                                         </div>
 
                                         <div className="d-flex align-items-center">

@@ -1,7 +1,7 @@
 const { Cart } = require('../models/cart');
 const express = require('express');
 const router = express.Router();
-
+const { MyList } = require('../models/myList');
 
 router.get(`/`, async (req, res) => {
 
@@ -61,27 +61,53 @@ router.post('/add', async (req, res) => {
 });
 
 
+
+
 router.delete('/:id', async (req, res) => {
+    try {
+        // Find the cart item by ID
+        const cartItem = await Cart.findById(req.params.id);
 
-    const cartItem = await Cart.findById(req.params.id);
+        // If the cart item does not exist, return 404
+        if (!cartItem) {
+            return res.status(404).json({ msg: "The cart item with the given ID was not found!" });
+        }
 
-    if (!cartItem) {
-        res.status(404).json({ msg: "The cart item given id is not found!" })
+        // Remove the cart item from the Cart collection
+        const deletedItem = await Cart.findByIdAndDelete(req.params.id);
+
+        // If deletion failed, return 404
+        if (!deletedItem) {
+            return res.status(404).json({
+                message: 'Cart item not found!',
+                success: false
+            });
+        }
+
+        // Now add the deleted item to the MyList (wishlist)
+        const myListItem = new MyList({
+            productTitle: cartItem.productTitle,
+            image: cartItem.image,
+            rating: cartItem.rating,
+            price: cartItem.price,
+            productId: cartItem.productId,
+            userId: cartItem.userId
+        });
+
+        // Save the new wishlist item
+        await myListItem.save();
+
+        // Respond with success message
+        res.status(200).json({
+            success: true,
+            message: 'Cart Item Deleted and added to Wishlist!',
+            deletedItem,
+            wishlistItem: myListItem
+        });
+    } catch (error) {
+        console.error("Error removing item from cart and adding to wishlist:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-
-    const deletedItem = await Cart.findByIdAndDelete(req.params.id);
-
-    if (!deletedItem) {
-        res.status(404).json({
-            message: 'Cart item not found!',
-            success: false
-        })
-    }
-
-    res.status(200).json({
-        success: true,
-        message: 'Cart Item Deleted!'
-    })
 });
 
 
