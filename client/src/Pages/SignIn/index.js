@@ -59,42 +59,52 @@ const SignIn = () => {
       try {
         if (res.error !== true) {
           localStorage.setItem("token", res.token);
-
+    
           const user = {
             name: res.user?.name,
             email: res.user?.email,
             userId: res.user?.id,
           };
-
+    
           localStorage.setItem("user", JSON.stringify(user));
-
+    
           context.setAlertBox({
             open: true,
             error: false,
             msg: res.msg,
           });
-
+    
           setTimeout(() => {
-            navigate("/"); // Use navigate instead of history
+            navigate("/"); 
             context.setIsLogin(true);
             setIsLoading(false);
             context.setisHeaderFooterShow(true);
           }, 2000);
         } else {
-          context.setAlertBox({
-            open: true,
-            error: true,
-            msg: res.msg,
-          });
+          // Handle blocked user message
+          if (res.msg === "User is blocked by the admin due to unauthorized activities.") {
+            context.setAlertBox({
+              open: true,
+              error: true,
+              msg: "Your account is blocked. Please contact support for further assistance.",
+            });
+          } else {
+            context.setAlertBox({
+              open: true,
+              error: true,
+              msg: res.msg,
+            });
+          }
           setIsLoading(false);
         }
-      } catch (error) {
+      } 
+      catch (error) {
         console.log(error);
         setIsLoading(false);
       }
     });
   };
-
+    
   const signInWithGoogle = () => {
     signInWithPopup(auth, googleProvider)
       .then((result) => {

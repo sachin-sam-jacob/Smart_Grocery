@@ -21,7 +21,6 @@ router.get(`/`, async (req, res) => {
 
 // // 2. View details of a specific user
 router.get('/:id', async (req, res) => {
-    console.log("entered");
     try {
         const user = await User.findById(req.params.id);
         if (!user) {

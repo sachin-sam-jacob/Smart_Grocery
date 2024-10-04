@@ -112,6 +112,11 @@ router.post(`/signin`, async (req, res) => {
             return res.status(404).json({ error: true, msg: "User not found!" });
         }
 
+        // Check if user is blocked
+        if (existingUser.isBlocked) {
+            return res.status(403).json({ error: true, msg: "User is blocked by the admin due to unauthorized activities." });
+        }
+
         // Compare plain text passwords directly
         if (password !== existingUser.password) {
             return res.status(400).json({ error: true, msg: "Incorrect password" });
@@ -129,6 +134,7 @@ router.post(`/signin`, async (req, res) => {
         res.status(500).json({ error: true, msg: "Something went wrong" });
     }
 });
+
 
 
 
