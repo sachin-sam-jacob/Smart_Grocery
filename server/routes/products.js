@@ -481,7 +481,19 @@ router.put('/:id', async (req, res) => {
     //res.send(product);
 
 })
-
+router.post('/updateStock', async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        await Product.findByIdAndUpdate(
+            productId,
+            { $inc: { countInStock: -quantity } }
+        );
+        res.status(200).json({ message: 'Stock updated successfully' });
+    } catch (error) {
+        console.error('Error updating stock:', error);
+        res.status(500).json({ message: 'Error updating stock', error: error.message });
+    }
+});
 
 
 module.exports = router;

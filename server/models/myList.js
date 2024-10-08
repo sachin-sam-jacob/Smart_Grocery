@@ -24,7 +24,8 @@ const myListSchema = mongoose.Schema({
     userId:{
         type:String,
         required:true
-    }
+    },
+   
 })
 
 myListSchema.virtual('id').get(function () {

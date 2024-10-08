@@ -23,9 +23,8 @@ router.get(`/`, async (req, res) => {
 
 
 router.post('/add', async (req, res) => {
-
+    console.log("cartitems", req.body);
     const cartItem = await Cart.find({productId:req.body.productId, userId: req.body.userId});
-
     if(cartItem.length===0){
         let cartList = new Cart({
             productTitle: req.body.productTitle,
@@ -37,6 +36,7 @@ router.post('/add', async (req, res) => {
             productId: req.body.productId,
             userId: req.body.userId,
             countInStock:req.body.countInStock,
+            weight: req.body.productWeight
         });
     
     
@@ -73,18 +73,23 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ msg: "The cart item with the given ID was not found!" });
         }
 
-        // Remove the cart item from the Cart collection
-        const deletedItem = await Cart.findByIdAndDelete(req.params.id);
+        // Check if the product is already in the wishlist (MyList)
+        const existingWishlistItem = await MyList.findOne({
+            productId: cartItem.productId,
+            userId: cartItem.userId
+        });
 
-        // If deletion failed, return 404
-        if (!deletedItem) {
-            return res.status(404).json({
-                message: 'Cart item not found!',
-                success: false
+        // If the item already exists in the wishlist, return a message and remove from cart
+        if (existingWishlistItem) {
+            await Cart.findByIdAndDelete(req.params.id); // Remove from cart
+            return res.status(200).json({
+                success: true,
+                message: 'Item already included in the wishlist. Removed from the cart!'
             });
+            
         }
-
-        // Now add the deleted item to the MyList (wishlist)
+        else{
+        // If the product is not in the wishlist, add it to the wishlist
         const myListItem = new MyList({
             productTitle: cartItem.productTitle,
             image: cartItem.image,
@@ -96,6 +101,9 @@ router.delete('/:id', async (req, res) => {
 
         // Save the new wishlist item
         await myListItem.save();
+    
+        // Remove the cart item from the Cart collection
+        const deletedItem = await Cart.findByIdAndDelete(req.params.id);
 
         // Respond with success message
         res.status(200).json({
@@ -104,6 +112,7 @@ router.delete('/:id', async (req, res) => {
             deletedItem,
             wishlistItem: myListItem
         });
+    }
     } catch (error) {
         console.error("Error removing item from cart and adding to wishlist:", error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -135,7 +144,8 @@ router.put('/:id', async (req, res) => {
             quantity: req.body.quantity,
             subTotal: req.body.subTotal,
             productId: req.body.productId,
-            userId: req.body.userId
+            userId: req.body.userId,
+            productWeight: req.body.productWeight
         },
         { new: true }
     )
@@ -151,6 +161,15 @@ router.put('/:id', async (req, res) => {
 
 })
 
-
+router.post('/clear', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        await Cart.deleteMany({ userId });
+        res.status(200).json({ message: 'Cart cleared successfully' });
+    } catch (error) {
+        console.error('Error clearing cart:', error);
+        res.status(500).json({ message: 'Error clearing cart', error: error.message });
+    }
+});
 module.exports = router;
 

@@ -58,7 +58,7 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Item not found!' });
         }
 
-        res.status(200).json({ success: true, message: 'Item Deleted!' });
+        res.status(200).json({ success: true, message: 'Item Removed from Wishlist!' });
     } catch (error) {
         console.error("Error deleting item from wishlist:", error);
         res.status(500).json({ success: false, message: 'Server error' });
