@@ -40,7 +40,10 @@ const cartSchema = mongoose.Schema({
     userId:{
         type:String,
         required:true
-    }
+    },
+    weight:{
+        type:String,
+    },
 })
 
 cartSchema.virtual('id').get(function () {

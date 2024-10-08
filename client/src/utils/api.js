@@ -59,8 +59,8 @@ export const editData = async (url, updatedData ) => {
 }
 
 export const deleteData = async (url ) => {
-    const { res } = await axios.delete(`${process.env.REACT_APP_API_URL}${url}`, params)
-    return res;
+    const { data } = await axios.delete(`${process.env.REACT_APP_API_URL}${url}`)
+    return data;
 }
 
 
