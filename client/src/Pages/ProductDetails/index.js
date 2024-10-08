@@ -148,8 +148,8 @@ const ProductDetails = () => {
             cartFields.subTotal = parseInt(productData?.price * productQuantity)
             cartFields.productId = productData?.id
             cartFields.countInStock = productData?.countInStock
+            cartFields.productWeight= productData?.productWeight[0]
             cartFields.userId = user?.userId
-
 
             context.addToCart(cartFields);
         } else {

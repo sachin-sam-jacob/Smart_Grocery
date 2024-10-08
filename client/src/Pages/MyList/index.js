@@ -3,7 +3,7 @@ import Rating from '@mui/material/Rating';
 import QuantityBox from "../../Components/QuantityBox";
 import { IoIosClose } from "react-icons/io";
 import Button from '@mui/material/Button';
-
+import swal from 'sweetalert2';
 import emprtCart from '../../assets/images/myList.png';
 import { MyContext } from "../../App";
 import { useContext, useEffect, useState } from "react";
@@ -43,12 +43,7 @@ const MyList = () => {
     const removeItem = (id) => {
         setIsLoading(true);
         deleteData(`/api/my-list/${id}`).then((res) => {
-            context.setAlertBox({
-                open: true,
-                error: false,
-                msg: "item removed from My List!"
-            })
-
+            swal.fire('Success',res.message,'success');
             const user = JSON.parse(localStorage.getItem("user"));
             fetchDataFromApi(`/api/my-list?userId=${user?.userId}`).then((res) => {
                 setmyListData(res);
