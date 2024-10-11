@@ -29,20 +29,16 @@ router.get(`/`, async (req, res) => {
 
 });
 
-router.get(`/get/count`, async (req, res) =>{
-    const productsReviews = await ProductReviews.countDocuments()
-
-    if(!productsReviews) {
-        res.status(500).json({success: false})
-    } else{
-        res.send({
-            productsReviews: productsReviews
-        });
+router.get('/get/count', async (req, res) => {
+    try {
+        
+        const count = await ProductReviews.countDocuments(); // Adjust this line based on your model
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error fetching product review count:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-   
-})
-
-
+});
 
 router.get('/:id', async (req, res) => {
 

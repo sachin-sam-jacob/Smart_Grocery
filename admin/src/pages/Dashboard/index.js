@@ -27,7 +27,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import Rating from '@mui/material/Rating';
-import { deleteData, fetchDataFromApi } from "../../utils/api";
+import { deleteData, fetchDataFromApi,updateStockAdmin } from "../../utils/api";
 
 export const data = [
     ["Year", "Sales", "Expenses"],
@@ -98,7 +98,7 @@ const Dashboard = () => {
         })
 
         fetchDataFromApi("/api/productReviews/get/count").then((res) => {
-            setTotalProductsReviews(res.productsReviews);
+            setTotalProductsReviews(res.count);
         })
 
 
@@ -108,17 +108,28 @@ const Dashboard = () => {
 
     const deleteProduct = (id) => {
         context.setProgress(40);
-        deleteData(`/api/products/${id}`).then((res) => {
-            context.setProgress(100);
-            context.setAlertBox({
-                open: true,
-                error: false,
-                msg: 'Product Deleted!'
-            });
-            fetchDataFromApi("/api/products?page=${1}&perPage=8").then((res) => {
-                setProductList(res);
+        // Call the new function to set stock to 0
+        updateStockAdmin(id)
+            .then((res) => {
+                context.setProgress(100);
+                context.setAlertBox({
+                    open: true,
+                    error: false,
+                    msg: 'Product stock set to 0!'
+                });
+                // Refresh the product list
+                fetchDataFromApi("/api/products?page=1&perPage=8").then((res) => {
+                    setProductList(res);
+                });
             })
-        })
+            .catch((error) => {
+                console.error("Error setting stock to 0:", error);
+                context.setAlertBox({
+                    open: true,
+                    error: true,
+                    msg: 'Failed to set product stock to 0.'
+                });
+            });
     }
 
 

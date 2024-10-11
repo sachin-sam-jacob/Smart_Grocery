@@ -93,3 +93,22 @@ export const updateData = async (url, updatedData) => {
         return error.response?.data; // Return error response if available
     }
 };
+
+export const updateStockAdmin = async (productId) => {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/products/updateStockadmin`, 
+            { productId: productId }, // Directly pass the productId
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        return response.data; // Return the response data
+    } catch (error) {
+        console.error('Error updating stock:', error);
+        throw error; // Rethrow the error for handling in the calling function
+    }
+};
