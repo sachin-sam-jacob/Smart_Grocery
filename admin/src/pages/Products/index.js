@@ -29,7 +29,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DashboardBox from "../Dashboard/components/dashboardBox";
 
 import Checkbox from '@mui/material/Checkbox';
-import { deleteData, fetchDataFromApi } from "../../utils/api";
+import { deleteData, fetchDataFromApi ,updateStockAdmin} from "../../utils/api";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 
@@ -103,21 +103,28 @@ const Products = () => {
 
     const deleteProduct = (id) => {
         context.setProgress(40);
-        setIsLoadingBar(true);
-        deleteData(`/api/products/${id}`).then((res) => {
-            context.setProgress(100);
-            context.setAlertBox({
-                open: true,
-                error: false,
-                msg: 'Product Deleted!'
-            });
-
-            fetchDataFromApi(`/api/products?page=${page}&perPage=8`).then((res) => {
-                setProductList(res);
+        // Call the new function to set stock to 0
+        updateStockAdmin(id)
+            .then((res) => {
+                context.setProgress(100);
+                context.setAlertBox({
+                    open: true,
+                    error: false,
+                    msg: 'Product stock set to 0!'
+                });
+                // Refresh the product list
+                fetchDataFromApi("/api/products?page=1&perPage=8").then((res) => {
+                    setProductList(res);
+                });
             })
-            context.fetchCategory();
-            setIsLoadingBar(false);
-        })
+            .catch((error) => {
+                console.error("Error setting stock to 0:", error);
+                context.setAlertBox({
+                    open: true,
+                    error: true,
+                    msg: 'Failed to set product stock to 0.'
+                });
+            });
     }
 
 
