@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const Orders = () => {
 
     const [orders, setOrders] = useState([]);
-    const [products, setproducts] = useState([]);
+    const [products, setProducts] = useState([]);
     const [page, setPage] = useState(1);
 
     const [isOpenModal, setIsOpenModal] = useState(false);
@@ -35,13 +35,15 @@ const Orders = () => {
     }, []);
 
 
-
-
     const showProducts = (id) => {
         fetchDataFromApi(`/api/orders/${id}`).then((res) => {
             setIsOpenModal(true);
-            setproducts(res.products);
+            setProducts(res.products); // Ensure this is correctly accessing the products
         })
+    }
+
+    const viewInvoice = (id) => {
+        history(`/orders/invoice/${id}`); // Navigate to the invoice page
     }
 
 
@@ -66,6 +68,7 @@ const Orders = () => {
                                     <th>User Id</th>
                                     <th>Order Status</th>
                                     <th>Date</th>
+                                    <th>Invoice</th> {/* New Invoice Column */}
                                 </tr>
                             </thead>
 
@@ -92,6 +95,11 @@ const Orders = () => {
                                                         }
                                                     </td>
                                                     <td>{order?.date}</td>
+                                                    <td>
+                                                        <Button variant="contained" color="primary" onClick={() => viewInvoice(order?._id)}>
+                                                            View Invoice
+                                                        </Button>
+                                                    </td> {/* Button to view invoice */}
                                                 </tr>
 
                                             </>
