@@ -59,26 +59,33 @@ const SignIn = () => {
       try {
         if (res.error !== true) {
           localStorage.setItem("token", res.token);
-    
+
           const user = {
             name: res.user?.name,
             email: res.user?.email,
             userId: res.user?.id,
+            isAdmin: res.user?.isAdmin, // Store isAdmin status
           };
-    
+
           localStorage.setItem("user", JSON.stringify(user));
-    
+
           context.setAlertBox({
             open: true,
             error: false,
             msg: res.msg,
           });
-    
+
           setTimeout(() => {
-            navigate("/"); 
             context.setIsLogin(true);
             setIsLoading(false);
             context.setisHeaderFooterShow(true);
+
+            // Redirect based on isAdmin status
+            if (user.isAdmin) {
+              window.location.href = "http://localhost:3002/"; // Redirect to admin page
+            } else {
+              navigate("/"); // Redirect to user home page
+            }
           }, 2000);
         } else {
           // Handle blocked user message
@@ -207,7 +214,7 @@ const SignIn = () => {
 
             <div className="form-group">
               <TextField
-                id="standard-basic"
+                id="emailid"
                 label="Email"
                 type="email"
                 required
@@ -219,7 +226,7 @@ const SignIn = () => {
             </div>
             <div className="form-group">
               <TextField
-                id="standard-basic"
+                id="passwords"
                 label="Password"
                 type="password"
                 required
@@ -235,7 +242,7 @@ const SignIn = () => {
             </a>
             </Link>
             <div className="d-flex align-items-center mt-3 mb-3">
-              <Button type="submit" className="btn-blue col btn-lg btn-big">
+              <Button type="submit" id="login" className="btn-blue col btn-lg btn-big">
                 {isLoading === true ? <CircularProgress /> : "Sign In"}
               </Button>
               <Link to="/">

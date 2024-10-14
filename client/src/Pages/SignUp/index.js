@@ -264,7 +264,7 @@ const SignUp = () => {
         {/* SVG for background */}
       </div>
 
-      <div className="container">
+      <div className="container" style={{fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'}}>
         <div className="box card p-3 shadow border-0">
           <div className="text-center">
             <img style={{ width: "130px", height: "50px" }} src={Logo} />
@@ -345,6 +345,8 @@ const SignUp = () => {
                 type="submit"
                 className="btn btn-primary w-100"
                 disabled={isLoading}
+                style={{backgroundColor:'#0BDA51',color:'white',fontSize:'15px',fontWeight:'bolder'
+                }}
               >
                 {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
               </Button>
@@ -354,13 +356,24 @@ const SignUp = () => {
               <span>or</span>
             </div>
 
-            <div className="googleBtnContainer">
+            <div className="googleBtnContainer" style={{ maxWidth: '200px', margin: '0 auto' }}>
               <Button
                 onClick={signInWithGoogle}
                 variant="outlined"
-                className="w-100 d-flex align-items-center justify-content-center"
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  borderRadius: '20px',
+                  borderColor: '#0BDA51',
+                  color: '#0BDA51',
+                  backgroundColor: 'white',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0BDA51'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
               >
-                <img src={GoogleImg} alt="google" className="mr-2" />
+                <img src={GoogleImg} alt="google" style={{ width: '20px', height: '20px', marginRight: '5px' }} />
                 Continue with Google
               </Button>
             </div>
