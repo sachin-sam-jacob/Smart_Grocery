@@ -214,6 +214,81 @@ router.get(`/`, async (req, res) => {
 
 });
 
+router.get('/filterByPrice', async (req, res) => {
+    const { minPrice, maxPrice, subCatId, category, location } = req.query;
+
+    try {
+        const query = {
+            price: { $gte: Number(minPrice), $lte: Number(maxPrice) }
+        };
+        if (subCatId) {
+            query.subCatId = subCatId;
+        } else if (category) {
+            query.category = category;
+        }
+
+        const products = await Product.find(query).exec();
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: "No products found" });
+        }
+
+        res.status(200).json(products);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+router.get(`/listing`, async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 10;
+    let query = {};
+    
+    // Build the query based on filters
+    if (req.query.location && req.query.location !== "All") {
+        query.location = req.query.location;
+    }
+    if (req.query.catId) {
+        query.catId = req.query.catId;
+    }
+    if (req.query.subCatId) {
+        query.subCatId = req.query.subCatId;
+    }
+    if (req.query.minPrice && req.query.maxPrice) {
+        query.price = { 
+            $gte: parseFloat(req.query.minPrice), 
+            $lte: parseFloat(req.query.maxPrice) 
+        };
+    }
+    if (req.query.rating) {
+        query.rating = { $gte: parseFloat(req.query.rating) };
+    }
+
+    try {
+        const totalProducts = await Product.countDocuments(query);
+        const productList = await Product.find(query)
+            .populate("category")
+            .skip((page - 1) * perPage)
+            .limit(perPage)
+            .lean()
+            .exec();
+
+        return res.status(200).json({
+            products: productList,
+            totalPages: Math.ceil(totalProducts / perPage),
+            page: page,
+            totalProducts: totalProducts
+        });
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ success: false, error: "Internal server error" });
+    }
+});
+
+// Add this route for fetching a single product
+
 
 router.get(`/get/count`, async (req, res) =>{
     const productsCount = await Product.countDocuments()
@@ -365,9 +440,8 @@ router.post(`/create`, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     productEditId = req.params.id;
-
     const product = await Product.findById(req.params.id).populate("category");;
-
+    console.log("Product Printed:",product)
     if (!product) {
         res.status(500).json({ message: 'The product with the given ID was not found.' })
     }
@@ -495,5 +569,22 @@ router.post('/updateStock', async (req, res) => {
     }
 });
 
+
+router.post('/updateStockadmin', async (req, res) => {
+    try {
+
+        const { productId } = req.body;
+        console.log("Received request to set stock to 0 for product ID:", req.body.productId);
+        // Set the stock to 0 instead of deleting the product
+        await Product.findByIdAndUpdate(
+            productId,
+            { countInStock: 0 } // Directly set countInStock to 0
+        );
+        res.status(200).json({ message: 'Product stock set to 0 successfully' });
+    } catch (error) {
+        console.error('Error updating stock:', error);
+        res.status(500).json({ message: 'Error updating stock', error: error.message });
+    }
+});
 
 module.exports = router;

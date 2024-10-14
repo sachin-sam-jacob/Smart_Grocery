@@ -1,7 +1,7 @@
 const { Orders } = require('../models/orders');
 const express = require('express');
 const router = express.Router();
-
+const products=require('../models/products');
 
 
 router.get(`/`, async (req, res) => {
@@ -27,14 +27,22 @@ router.get(`/`, async (req, res) => {
 
 
 router.get('/:id', async (req, res) => {
+    try {
+        const order = await Orders.findById(req.params.id)
+            .populate({
+                path: 'products.productId',
+                select: 'productTitle image price' // Specify the fields you want to retrieve
+            });
+            
 
-    const order = await Orders.findById(req.params.id);
-
-    if (!order) {
-        res.status(500).json({ message: 'The order with the given ID was not found.' })
+        if (!order) {
+            return res.status(404).json({ message: 'The order with the given ID was not found.' });
+        }
+        return res.status(200).send(order);
+    } catch (error) {
+        return res.status(500).json({ message: 'An error occurred while fetching the order.', error });
     }
-    return res.status(200).send(order);
-})
+});
 
 router.get(`/get/count`, async (req, res) =>{
     const orderCount = await Orders.countDocuments()

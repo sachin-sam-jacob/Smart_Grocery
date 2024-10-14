@@ -21,7 +21,15 @@ export const fetchDataFromApi = async (url) => {
     }
 }
 
-
+export const fetchDataApi = async (url) => {
+    try {
+        const { res} = await axios.get(process.env.REACT_APP_API_URL + url, params)
+        return res;
+    } catch (error) {
+        console.log(error);
+        return error;
+    }
+}
 
 
 export const postData = async (url, formData) => {
