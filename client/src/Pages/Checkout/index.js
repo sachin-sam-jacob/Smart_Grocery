@@ -142,7 +142,7 @@ const Checkout = () => {
         const addressInfo = {
             name: formFields.fullName,
             phoneNumber: formFields.phoneNumber,
-            address: formFields.streetAddressLine1 + formFields.streetAddressLine2,
+            address: formFields.streetAddressLine1 + " " + formFields.streetAddressLine2,
             pincode: formFields.zipCode,
             date: new Date().toLocaleString(
                 "en-US",
@@ -163,51 +163,79 @@ const Checkout = () => {
             amount: parseInt(totalAmount * 100),
             currency: "INR",
             order_receipt: 'order_rcptid_' + formFields.fullName,
-            name: "E-Bharat",
+            name: "SMART GROCERY PAYMENT GATEWAY",
             description: "for testing purpose",
             handler: function (response) {
-
-                 console.log(response)
-
-
+                console.log(response)
+    
                 const paymentId = response.razorpay_payment_id
-
+    
                 const user = JSON.parse(localStorage.getItem("user"));
-
+    
+                // Update the payload to include all necessary product details
                 const payLoad = {
                     name: addressInfo.name,
                     phoneNumber: formFields.phoneNumber,
                     address: addressInfo.address,
                     pincode: addressInfo.pincode,
-                    amount: parseInt(totalAmount * 100),
+                    amount: parseInt(totalAmount),
                     paymentId: paymentId,
                     email: user.email,
                     userid: user.userId,
-                    products: cartData
+                    products: cartData.map(item => ({
+                        productId: item.productId, // Ensure this is the correct ID
+                        productTitle: item.productTitle, // Include product title
+                        quantity: item.quantity,
+                        price: item.price, // Include price
+                        subTotal: item.subTotal ,// Include subtotal
+                        image: item.image
+                    }))
                 }
-
-               // console.log(payLoad)
-
-
+    
                 postData(`/api/orders/create`, payLoad).then(res => {
+                    // Update stock and clear cart
+                    updateStockAndClearCart(user.userId, cartData);
                     history("/orders");
-                })
-
-
-
+                    window.location.reload();
+                }).catch(error => {
+                    console.error("Error creating order:", error);
+                    context.setAlertBox({
+                        open: true,
+                        error: true,
+                        msg: "Error creating order. Please try again."
+                    });
+                });
             },
-
             theme: {
                 color: "#3399cc"
             }
         };
-
-
+    
         var pay = new window.Razorpay(options);
         pay.open();
-
-
     }
+    
+    // Add this function to update stock and clear cart
+    const updateStockAndClearCart = (userId, cartData) => {
+        // Update stock
+        cartData.forEach(item => {
+            postData(`/api/products/updateStock`, {
+                productId: item.productId,
+                quantity: item.quantity
+            }).catch(error => {
+                console.error("Error updating stock:", error);
+            });
+        });
+    
+        // Clear cart
+        postData(`/api/cart/clear`, { userId })
+            .then(() => {
+                console.log("Cart cleared successfully");
+            })
+            .catch(error => {
+                console.error("Error clearing cart:", error);
+            });
+    };
 
     return (
         <section className='section'>
