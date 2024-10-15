@@ -51,6 +51,7 @@ const Header = () => {
         context.setIsLogin(false);
        // window.location.href = "/signIn"
         history("/signIn");
+        window.location.reload();
     }
 
 
