@@ -1,172 +1,159 @@
 import React, { useEffect, useState } from 'react';
 import { fetchDataFromApi } from '../../utils/api';
-import Pagination from '@mui/material/Pagination';
 import Dialog from '@mui/material/Dialog';
 import { MdClose } from "react-icons/md";
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
-const Orders = () => {
+import { Box } from '@mui/material';
 
+const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
-    const [page, setPage] = useState(1);
-
     const [isOpenModal, setIsOpenModal] = useState(false);
-    const [isLogin,setIsLogin]  = useState(false);
-
-    const history = useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        window.scrollTo(0, 0);
-
         const token = localStorage.getItem("token");
-        if(token!=="" && token!==undefined  && token!==null){
-          setIsLogin(true);
-        }
-        else{
-          history("/signIn");
+        if (!token) {
+            navigate("/signIn");
         }
 
         const user = JSON.parse(localStorage.getItem("user"));
         fetchDataFromApi(`/api/orders?userid=${user?.userId}`).then((res) => {
             setOrders(res);
-        })
+        });
+    }, [navigate]);
 
-    }, []);
-
-
-    const showProducts = (id) => {
-        fetchDataFromApi(`/api/orders/${id}`).then((res) => {
-            setIsOpenModal(true);
-            setProducts(res.products); // Ensure this is correctly accessing the products
-        })
-    }
+    const showProducts = (productId) => {
+        navigate(`/product/${productId}`); // Navigate to the product details page
+    };
 
     const viewInvoice = (id) => {
-        history(`/orders/invoice/${id}`); // Navigate to the invoice page
-    }
+        navigate(`/orders/invoice/${id}`);
+    };
 
+    const cancelOrder = (id) => {
+        console.log('Cancel order:', id);
+    };
+
+    const trackOrder = (id) => {
+        console.log('Track order:', id);
+    };
 
     return (
-        <>
-            <section className="section">
-                <div className='container'>
-                    <h2 className='hd'>Orders</h2>
+        <Box sx={{ padding: '20px', backgroundColor: '#f5f5f5' }}>
+            <Box sx={{ maxWidth: '1200px', margin: '0 auto' }}>
+                <h2 style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', marginBottom: '20px', color: '#333' }}>Your Orders</h2>
 
-                    <div className='table-responsive orderTable'>
-                        <table className='table table-striped table-bordered'>
-                            <thead className='thead-light'>
-                                <tr>
-                                    <th>Paymant Id</th>
-                                    <th>Products</th>
-                                    <th>Name</th>
-                                    <th>Phone Number</th>
-                                    <th>Address</th>
-                                    <th>Pincode</th>
-                                    <th>Total Amount</th>
-                                    <th>Email</th>
-                                    <th>User Id</th>
-                                    <th>Order Status</th>
-                                    <th>Date</th>
-                                    <th>Invoice</th> {/* New Invoice Column */}
-                                </tr>
-                            </thead>
+                {orders.length === 0 ? (
+                    <p>No orders found.</p>
+                ) : (
+                    orders.map((order, index) => (
+                        <Box key={index} sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start', // Align items to the start
+                            border: '1px solid #ddd',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            backgroundColor: '#fff',
+                            marginBottom: '20px',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                        }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', width: '70%' }}>
+                                <img
+                                    src={order?.products[0]?.image}
+                                    alt={order?.products[0]?.productTitle}
+                                    style={{ width: '100px', height: '100px', objectFit: 'contain', border: '1px solid #ddd', marginRight: '20px' }} // Image on the left
+                                />
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                    <p style={{ fontWeight: 'bold', fontSize: '18px', margin: '0' }}>{order?.products[0]?.productTitle}</p> {/* Product name */}
+                                    <p style={{ margin: '5px 0' }}><strong>Order Placed:</strong> {new Date(order?.date).toLocaleDateString()}</p>
+                                    <p style={{ margin: '5px 0' }}><strong>Total:</strong> ₹{order?.amount}</p>
+                                    <p style={{ margin: '5px 0' }}><strong>Ship to:</strong> {order?.name}</p>
+                                    <p style={{ margin: '5px 0' }}><strong>Status:</strong> {order?.status === "pending" ? 
+                                        <span style={{ color: 'red' }}>Pending</span> : 
+                                        <span style={{ color: 'green' }}>Delivered</span>
+                                    }</p>
+                                    <Button
+                                        variant="contained"
+                                        sx={{ backgroundColor: '#ff9900', color: '#fff', marginTop: '10px' }}
+                                        onClick={() => showProducts(order?.products[0]?.productId)}
+                                    >
+                                        View Product
+                                    </Button>
+                                </Box>
+                            </Box>
 
-                            <tbody>
-                                {
-                                    orders?.length !== 0 && orders?.map((order, index) => {
-                                        return (
-                                            <>
-                                                <tr key={index}>
-                                                    <td><span className='text-blue fonmt-weight-bold'>{order?.paymentId}</span></td>
-                                                    <td><span className='text-blue fonmt-weight-bold cursor' onClick={() => showProducts(order?._id)}>Click here to view</span>
-                                                    </td>
-                                                    <td>{order?.name}</td>
-                                                    <td>{order?.phoneNumber}</td>
-                                                    <td>{order?.address}</td>
-                                                    <td>{order?.pincode}</td>
-                                                    <td>{order?.amount}</td>
-                                                    <td>{order?.email}</td>
-                                                    <td>{order?.userid}</td>
-                                                    <td>
-                                                        {order?.status === "pending" ?
-                                                            <span className='badge badge-danger'>{order?.status}</span> :
-                                                            <span className='badge badge-success'>{order?.status}</span>
-                                                        }
-                                                    </td>
-                                                    <td>{order?.date}</td>
-                                                    <td>
-                                                        <Button variant="contained" color="primary" onClick={() => viewInvoice(order?._id)}>
-                                                            View Invoice
-                                                        </Button>
-                                                    </td> {/* Button to view invoice */}
-                                                </tr>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    sx={{ backgroundColor: '#007bff', color: '#fff', marginBottom: '10px' }}
+                                    onClick={() => viewInvoice(order?._id)}
+                                >
+                                    View Invoice
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    sx={{ backgroundColor: '#d9534f', color: '#fff', marginBottom: '10px' }}
+                                    onClick={() => cancelOrder(order?._id)}
+                                >
+                                    Cancel Order
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    sx={{ backgroundColor: '#5bc0de', color: '#fff' }}
+                                    onClick={() => trackOrder(order?._id)}
+                                >
+                                    Track Order
+                                </Button>
+                            </Box>
+                        </Box>
+                    ))
+                )}
+            </Box>
 
-                                            </>
+            <Dialog open={isOpenModal} className="productModal">
+                <Button onClick={() => setIsOpenModal(false)} sx={{ position: 'absolute', top: '10px', right: '10px' }}>
+                    <MdClose />
+                </Button>
+                <h4 style={{ textAlign: 'center', margin: '20px 0' }}>Products</h4>
 
-                                        )
-                                    })
-                                }
-
-                            </tbody>
-
-
-                        </table>
-                    </div>
-
-
-                   
-
-                </div>
-            </section>
-
-
-            <Dialog open={isOpenModal} className="productModal" >
-                <Button className='close_' onClick={() => setIsOpenModal(false)}><MdClose /></Button>
-                <h4 class="mb-1 font-weight-bold pr-5 mb-4">Products</h4>
-
-                <div className='table-responsive orderTable'>
-                    <table className='table table-striped table-bordered'>
-                        <thead className='thead-light'>
+                <Box sx={{ width: '100%', padding: '20px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
                             <tr>
-                                <th>Product Id</th>
-                                <th>Product Title</th>
-                                <th>Image</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>SubTotal</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>Product Id</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>Product Title</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>Image</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>Quantity</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>Price</th>
+                                <th style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>SubTotal</th>
                             </tr>
                         </thead>
-
                         <tbody>
-                            {
-                                products?.length !== 0 && products?.map((item, index) => {
-                                    return (
-                                        <tr>
-                                            <td>{item?.productId}</td>
-                                            <td  style={{whiteSpace:"inherit"}}><span>
-                                                {item?.productTitle?.substr(0,30)+'...'}
-                                            </span></td>
-                                            <td>
-                                                <div className='img'>
-                                                    <img src={item?.image} />
-                                                </div>
-                                            </td>
-                                            <td>{item?.quantity}</td>
-                                            <td>{item?.price}</td>
-                                            <td>{item?.subTotal}</td>
-                                        </tr>
-                                    )
-                                })
-                            }
-
+                            {products.map((item, index) => (
+                                <tr key={index}>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>{item?.productId}</td>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>{item?.productTitle}</td>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>
+                                        <img
+                                            src={item?.image}
+                                            alt={item?.productTitle}
+                                            style={{ width: '50px', height: '50px', objectFit: 'contain', border: '1px solid #ddd' }}
+                                        />
+                                    </td>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>{item?.quantity}</td>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>{item?.price}</td>
+                                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px' }}>{item?.subTotal}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
-                </div>
+                </Box>
             </Dialog>
-
-        </>
-    )
-}
+        </Box>
+    );
+};
 
 export default Orders;

@@ -97,58 +97,92 @@ const Invoice = () => {
         </div>
     );
 };
-
 const styles = {
     invoiceContainer: {
-        padding: '20px',
-        maxWidth: '800px',
-        margin: '0 auto',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        backgroundColor: '#fff',
-        fontFamily: 'Arial, sans-serif'
+        padding: '30px',
+        maxWidth: '900px',
+        margin: '40px auto',
+        border: '1px solid #e0e0e0',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        backgroundColor: '#ffffff',
+        fontFamily: 'Roboto, sans-serif',
+        color: '#444',
     },
     title: {
         textAlign: 'center',
-        marginBottom: '10px',
-        fontSize: '24px',
-        color: '#333'
+        marginBottom: '20px',
+        fontSize: '28px',
+        color: '#222',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
     },
     invoiceTitle: {
         textAlign: 'center',
-        marginBottom: '10px',
-        fontSize: '20px',
-        color: '#555'
+        marginBottom: '20px',
+        fontSize: '22px',
+        color: '#555',
+        fontWeight: '600',
     },
     thankYou: {
         textAlign: 'center',
         fontSize: '16px',
-        marginBottom: '20px',
-        color: '#777'
+        marginBottom: '25px',
+        color: '#888',
+        fontStyle: 'italic',
     },
     details: {
-        marginBottom: '20px'
+        marginBottom: '25px',
+        lineHeight: '1.8',
     },
     productTitle: {
-        marginTop: '20px',
-        marginBottom: '10px',
-        fontSize: '18px',
-        color: '#333'
+        marginTop: '30px',
+        marginBottom: '15px',
+        fontSize: '20px',
+        color: '#333',
+        fontWeight: '600',
+        borderBottom: '2px solid #f0f0f0',
+        paddingBottom: '10px',
     },
     table: {
         width: '100%',
         borderCollapse: 'collapse',
-        marginBottom: '20px'
+        marginBottom: '30px',
+    },
+    tableHead: {
+        backgroundColor: '#f9f9f9',
+        fontSize: '16px',
+        fontWeight: '500',
+    },
+    tableHeadCell: {
+        padding: '12px 15px',
+        borderBottom: '1px solid #ddd',
+        textAlign: 'left',
+        color: '#555',
+    },
+    tableBodyCell: {
+        padding: '12px 15px',
+        borderBottom: '1px solid #eee',
+        textAlign: 'left',
     },
     buttonContainer: {
         display: 'flex',
-        justifyContent: 'space-between',
-        marginTop: '20px'
+        justifyContent: 'flex-end',
+        gap: '10px',
+        marginTop: '30px',
     },
     backButton: {
-        marginLeft: '10px'
-    }
+        backgroundColor: '#f0f0f0',
+        color: '#555',
+        textTransform: 'none',
+    },
+    downloadButton: {
+        backgroundColor: '#007bff',
+        color: '#fff',
+        textTransform: 'none',
+    },
 };
+
 
 export default Invoice;
