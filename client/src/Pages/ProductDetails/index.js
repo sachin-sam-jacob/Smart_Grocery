@@ -327,34 +327,34 @@ const ProductDetails = () => {
 
 
                             <div className="d-flex align-items-center mt-3 actions_">
+                            {productData?.countInStock > 0 && ( // Conditionally render QuantityBox
                                 <QuantityBox quantity={quantity} item={productData} selectedItem={selectedItem} />
-
+                            )}
                                 <div className="d-flex align-items-center btnActions">
-                                <Button className="btn-blue btn-lg btn-big btn-round bg-red" onClick={() => addtoCart()}>
-                                    <BsCartFill /> &nbsp;
-                                    {
-                                        context.addingInCart === true ? "adding..." : " Add to cart"
-                                    }
+                                    {productData?.countInStock > 0 && (
+                                        <Button className="btn-blue btn-lg btn-big btn-round bg-red" onClick={() => addtoCart()}>
+                                            <BsCartFill /> &nbsp;
+                                            {context.addingInCart === true ? "adding..." : " Add to cart"}
+                                        </Button>
+                                    )}
 
-                                </Button>
+                                    <Tooltip title={`${isAddedToMyList === true ? 'Added to Wishlist' : 'Add to Wishlist'}`} placement="top">
+                                        <Button className={`btn-blue btn-lg btn-big btn-circle ml-4`} onClick={() => addToMyList(id)}>
+                                            {
+                                                isAddedToMyList === true ? <FaHeart className="text-danger" />
 
-                                <Tooltip title={`${isAddedToMyList === true ? 'Added to Wishlist' : 'Add to Wishlist'}`} placement="top">
-                                    <Button className={`btn-blue btn-lg btn-big btn-circle ml-4`} onClick={() => addToMyList(id)}>
-                                        {
-                                            isAddedToMyList === true ? <FaHeart className="text-danger" />
+                                                    :
+                                                    <FaRegHeart />
+                                            }
 
-                                                :
-                                                <FaRegHeart />
-                                        }
+                                        </Button>
+                                    </Tooltip>
 
-                                    </Button>
-                                </Tooltip>
-
-                                <Tooltip title="Add to Compare" placement="top">
-                                    <Button className="btn-blue btn-lg btn-big btn-circle ml-2">
-                                        <MdOutlineCompareArrows />
-                                    </Button>
-                                </Tooltip>
+                                    <Tooltip title="Add to Compare" placement="top">
+                                        <Button className="btn-blue btn-lg btn-big btn-circle ml-2">
+                                            <MdOutlineCompareArrows />
+                                        </Button>
+                                    </Tooltip>
 
                                 </div>
 
