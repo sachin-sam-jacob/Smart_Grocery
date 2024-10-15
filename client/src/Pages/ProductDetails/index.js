@@ -552,7 +552,7 @@ const ProductDetails = () => {
                                             <br className='res-hide' />
 
 
-                                            <form className='reviewForm' onSubmit={addReview}>
+                                            {/* <form className='reviewForm' onSubmit={addReview}>
 
                                                 <h4>Add a review</h4>
                                                 <div className='form-group'>
@@ -581,7 +581,7 @@ const ProductDetails = () => {
                                                     </Button>
                                                 </div>
 
-                                            </form>
+                                            </form> */}
 
                                         </div>
 
