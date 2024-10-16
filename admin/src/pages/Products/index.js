@@ -81,6 +81,7 @@ const Products = () => {
         window.scrollTo(0, 0);
         context.setProgress(40);
         fetchDataFromApi("/api/products?page=1&perPage=8").then((res) => {
+            console.log("Printing products",res)
             setProductList(res);
             context.setProgress(100);
         })
@@ -286,9 +287,9 @@ const Products = () => {
                                     <th>PRICE</th>
                                     <th>RATING</th>
                                     <th>DISCOUNT</th>
-                                    <th>PRODUCT RAMS</th>
+                                    <th>STOCK AVAILABLE</th>
                                     <th>PRODUCT WEIGHT</th>
-                                    <th>PRODUCT SIZE</th>
+                                    <th>LOCATION</th>
                                     <th>ACTION</th>
                                 </tr>
                             </thead>
@@ -332,11 +333,7 @@ const Products = () => {
                                                 <td>{item?.discount}</td>
 
                                                 <td>
-                                                    {item?.productRam?.map((ram) => {
-                                                        return (
-                                                            <span className="badge badge-primary mr-2">{ram}</span>
-                                                        )
-                                                    })}
+                                                    {item?.countInStock}
                                                 </td>
 
                                                 <td>
@@ -346,13 +343,8 @@ const Products = () => {
                                                         )
                                                     })}
                                                 </td>
-
                                                 <td>
-                                                    {item?.size?.map((size) => {
-                                                        return (
-                                                            <span className="badge badge-primary mr-2">{size}</span>
-                                                        )
-                                                    })}
+                                                    {item?.location}
                                                 </td>
 
                                                 <td>
