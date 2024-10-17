@@ -11,6 +11,7 @@ const Orders = () => {
     const [products, setProducts] = useState([]);
     const [isOpenModal, setIsOpenModal] = useState(false);
     const navigate = useNavigate();
+    const [reviewStatus, setReviewStatus] = useState({});
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -21,8 +22,24 @@ const Orders = () => {
         const user = JSON.parse(localStorage.getItem("user"));
         fetchDataFromApi(`/api/orders?userid=${user?.userId}`).then((res) => {
             setOrders(res);
+            // Check review status for each order
+            res.forEach(order => {
+                checkReviewStatus(order.products[0].productId, user.userId);
+            });
         });
     }, [navigate]);
+
+    const checkReviewStatus = async (productId, userId) => {
+        try {
+            const reviews = await fetchDataFromApi(`/api/productReviews?productId=${productId}&customerId=${userId}`);
+            setReviewStatus(prev => ({
+                ...prev,
+                [productId]: reviews.length > 0
+            }));
+        } catch (error) {
+            console.error('Error checking review status:', error);
+        }
+    };
 
     const showProducts = (productId) => {
         navigate(`/product/${productId}`); // Navigate to the product details page
@@ -33,11 +50,15 @@ const Orders = () => {
     };
 
     const cancelOrder = (id) => {
-        console.log('Cancel order:', id);
+        navigate(`/cancel-order/${id}`);
     };
 
     const trackOrder = (id) => {
         console.log('Track order:', id);
+    };
+
+    const addOrEditReview = (productId) => {
+        navigate(`/add-review/${productId}`);
     };
 
     return (
@@ -71,10 +92,15 @@ const Orders = () => {
                                     <p style={{ margin: '5px 0' }}><strong>Order Placed:</strong> {new Date(order?.date).toLocaleDateString()}</p>
                                     <p style={{ margin: '5px 0' }}><strong>Total:</strong> ₹{order?.amount}</p>
                                     <p style={{ margin: '5px 0' }}><strong>Ship to:</strong> {order?.name}</p>
-                                    <p style={{ margin: '5px 0' }}><strong>Status:</strong> {order?.status === "pending" ? 
-                                        <span style={{ color: 'red' }}>Pending</span> : 
-                                        <span style={{ color: 'green' }}>Delivered</span>
-                                    }</p>
+                                    <p style={{ margin: '5px 0' }}>
+                                        <strong>Status:</strong> {
+                                            order?.status === "pending" ? 
+                                                <span style={{ color: 'orange' }}>Pending</span> : 
+                                            order?.status === "cancelled" ?
+                                                <span style={{ color: 'red' }}>Cancelled</span> :
+                                                <span style={{ color: 'green' }}>Delivered</span>
+                                        }
+                                    </p>
                                     <Button
                                         variant="contained"
                                         sx={{ backgroundColor: '#ff9900', color: '#fff', marginTop: '10px' }}
@@ -93,20 +119,33 @@ const Orders = () => {
                                 >
                                     View Invoice
                                 </Button>
-                                <Button
-                                    variant="contained"
-                                    sx={{ backgroundColor: '#d9534f', color: '#fff', marginBottom: '10px' }}
-                                    onClick={() => cancelOrder(order?._id)}
-                                >
-                                    Cancel Order
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    sx={{ backgroundColor: '#5bc0de', color: '#fff' }}
-                                    onClick={() => trackOrder(order?._id)}
-                                >
-                                    Track Order
-                                </Button>
+                                {order?.status === "pending" && (
+                                    <Button
+                                        variant="contained"
+                                        sx={{ backgroundColor: '#d9534f', color: '#fff', marginBottom: '10px' }}
+                                        onClick={() => cancelOrder(order?._id)}
+                                    >
+                                        Cancel Order
+                                    </Button>
+                                )}
+                                {order?.status !== "cancelled" && (
+                                    <Button
+                                        variant="contained"
+                                        sx={{ backgroundColor: '#5bc0de', color: '#fff', marginBottom: '10px' }}
+                                        onClick={() => trackOrder(order?._id)}
+                                    >
+                                        Track Order
+                                    </Button>
+                                )}
+                                {order?.status === "confirm" && (
+                                    <Button
+                                        variant="contained"
+                                        sx={{ backgroundColor: '#28a745', color: '#fff' }}
+                                        onClick={() => addOrEditReview(order?.products[0]?.productId)}
+                                    >
+                                        {reviewStatus[order?.products[0]?.productId] ? 'Edit Review' : 'Write a Review'}
+                                    </Button>
+                                )}
                             </Box>
                         </Box>
                     ))

@@ -81,5 +81,26 @@ router.post('/add', async (req, res) => {
 });
 
 
-module.exports = router;
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedReview = await ProductReviews.findByIdAndUpdate(
+            req.params.id,
+            {
+                review: req.body.review,
+                customerRating: req.body.customerRating
+            },
+            { new: true }
+        );
 
+        if (!updatedReview) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        res.status(200).json(updatedReview);
+    } catch (error) {
+        console.error('Error updating review:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+module.exports = router;

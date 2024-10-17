@@ -25,6 +25,9 @@ import { fetchDataFromApi, postData } from "./utils/api";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Invoice from "./Pages/Orders/Invoice";
+import CancelOrder from "./Pages/Orders/cancelorder";
+import AddReview from "./Pages/Orders/addreview";
+
 
 const MyContext = createContext();
 
@@ -256,6 +259,8 @@ function App() {
           <Route exact={true} path="/my-account" element={<MyAccount />} />
           <Route exact={true} path="/search" element={<SearchPage />} />
           <Route path="/orders/invoice/:id" element={<Invoice />} />
+          <Route path="/cancel-order/:id" element={<CancelOrder />}/>
+          <Route path="/add-review/:productId" element={<AddReview />} />
         </Routes>
         {isHeaderFooterShow === true && <Footer />}
 

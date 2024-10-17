@@ -2,6 +2,9 @@ const { Orders } = require('../models/orders');
 const express = require('express');
 const router = express.Router();
 const products=require('../models/products');
+const mongoose = require('mongoose');
+const { CancelledOrder } = require('../models/cancelledOrders');
+const { Product } = require('../models/products');
 
 
 router.get(`/`, async (req, res) => {
@@ -141,7 +144,48 @@ router.put('/:id', async (req, res) => {
 
 })
 
+router.post('/:id/cancel', async (req, res) => {
+    console.log("Entered to the database");
+    try {
+        const order = await Orders.findById(req.params.id);
 
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        if (order.status !== 'pending') {
+            return res.status(400).json({ message: 'Order cannot be cancelled' });
+        }
+
+        // Update product stock
+        for (const item of order.products) {
+            await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { countInStock: item.quantity } }
+            );
+        }
+
+        // Create cancelled order record
+        const cancelledOrder = new CancelledOrder({
+            orderId: order._id,
+            userId: order.userid,
+            reason: req.body.reason
+        });
+        await cancelledOrder.save();
+
+        // Update order status
+        order.status = 'cancelled';
+        await order.save();
+
+        // Here you would typically initiate a refund process
+        // This is a placeholder for the actual refund logic
+        console.log(`Refund initiated for order ${order._id}`);
+        
+        res.status(200).json({ message: 'Order cancelled successfully' });
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        res.status(500).json({ message: 'An error occurred while cancelling the order', error: error.message });
+    }
+});
 
 module.exports = router;
-
