@@ -27,7 +27,7 @@ import Alert from "@mui/material/Alert";
 import Invoice from "./Pages/Orders/Invoice";
 import CancelOrder from "./Pages/Orders/cancelorder";
 import AddReview from "./Pages/Orders/addreview";
-
+import swal from 'sweetalert2';
 
 const MyContext = createContext();
 
@@ -59,6 +59,8 @@ function App() {
     email: "",
     userId: "",
   });
+
+  const [deliverablePincode, setDeliverablePincode] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -161,11 +163,7 @@ function App() {
       setAddingInCart(true);
       postData(`/api/cart/add`, data).then((res) => {
         if (res.status !== false) {
-          setAlertBox({
-            open: true,
-            error: false,
-            msg: "Item is added in the cart",
-          });
+          swal.fire("success","Product added to Cart !","success")
 
           setTimeout(() => {
             setAddingInCart(false);
@@ -173,11 +171,7 @@ function App() {
 
           getCartData();
         } else {
-          setAlertBox({
-            open: true,
-            error: true,
-            msg: res.msg,
-          });
+          swal.fire(res.msg)
           setAddingInCart(false);
         }
       });
@@ -218,6 +212,8 @@ function App() {
     windowWidth,
     isOpenNav,
     setIsOpenNav,
+    deliverablePincode,
+    setDeliverablePincode,
   };
 
   return (
