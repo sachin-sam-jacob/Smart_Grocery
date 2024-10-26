@@ -18,6 +18,7 @@ import { MyContext } from "../../App";
 import { fetchDataFromApi } from "../../utils/api";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -40,31 +41,39 @@ const Home = () => {
     setselectedCat(cat);
   };
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Redirect to login page if not logged in
+      navigate("/signin", { replace: true });
+    } else {
+      window.scrollTo(0, 0);
 
-    setselectedCat(context.categoryData[0]?.name);
+      setselectedCat(context.categoryData[0]?.name);
 
-    const location = localStorage.getItem("location");
+      const location = localStorage.getItem("location");
 
-    if (location !== null && location !== "" && location !== undefined) {
-      fetchDataFromApi(`/api/products/featured?location=${location}`).then(
-        (res) => {
-          setFeaturedProducts(res);
-        }
-      );
+      if (location !== null && location !== "" && location !== undefined) {
+        fetchDataFromApi(`/api/products/featured?location=${location}`).then(
+          (res) => {
+            setFeaturedProducts(res);
+          }
+        );
 
-      fetchDataFromApi(
-        `/api/products?page=1&perPage=8&location=${location}`
-      ).then((res) => {
-        setProductsData(res);
+        fetchDataFromApi(
+          `/api/products?page=1&perPage=8&location=${location}`
+        ).then((res) => {
+          setProductsData(res);
+        });
+      }
+
+      fetchDataFromApi("/api/homeBanner").then((res) => {
+        setHomeSlides(res);
       });
     }
-
-    fetchDataFromApi("/api/homeBanner").then((res) => {
-      setHomeSlides(res);
-    });
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (context.categoryData[0] !== undefined)

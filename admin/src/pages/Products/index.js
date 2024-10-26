@@ -193,7 +193,7 @@ const Products = () => {
                             />
                         </Breadcrumbs>
 
-                        <Link to="/product/upload"><Button className="btn-blue  ml-3 pl-3 pr-3">Add Product</Button></Link>
+                        {/* <Link to="/product/upload"><Button className="btn-blue  ml-3 pl-3 pr-3">Add Product</Button></Link> */}
 
 
                     </div>

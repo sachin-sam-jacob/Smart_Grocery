@@ -9,6 +9,7 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 
 const cloudinary = require('cloudinary').v2;
+const District = require('../models/pincode.js');
 
 
 cloudinary.config({
@@ -583,6 +584,33 @@ router.post('/updateStockadmin', async (req, res) => {
     } catch (error) {
         console.error('Error updating stock:', error);
         res.status(500).json({ message: 'Error updating stock', error: error.message });
+    }
+});
+
+router.get('/check-pincode/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pincode } = req.query;
+
+        // Find the product
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Find the district based on the product's location
+        const district = await District.findOne({ name: product.location });
+        if (!district) {
+            return res.status(404).json({ message: 'District not found' });
+        }
+
+        // Check if the pincode exists in the district's pincodes
+        const isDeliverable = district.pincodes.some(p => p.code === pincode);
+
+        res.json({ isDeliverable });
+    } catch (error) {
+        console.error('Error checking pincode:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

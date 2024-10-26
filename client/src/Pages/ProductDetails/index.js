@@ -8,12 +8,13 @@ import { FaRegHeart } from "react-icons/fa";
 import { MdOutlineCompareArrows } from "react-icons/md";
 import Tooltip from '@mui/material/Tooltip';
 import RelatedProducts from "./RelatedProducts";
-
+import swal from 'sweetalert2';
 import { useParams } from "react-router-dom";
 import { fetchDataFromApi, postData } from "../../utils/api";
 import CircularProgress from '@mui/material/CircularProgress';
 import { MyContext } from "../../App";
 import { FaHeart } from "react-icons/fa";
+import { isDeliverable } from "../../data/pincode"; // Add this import
 
 
 const ProductDetails = () => {
@@ -34,6 +35,10 @@ const ProductDetails = () => {
     const { id } = useParams();
 
     const context = useContext(MyContext);
+
+    const [pincode, setPincode] = useState('');
+    const [pincodeError, setPincodeError] = useState('');
+    const [isDeliverablePincode, setIsDeliverablePincode] = useState(false);
 
     const isActive = (index) => {
         setActiveSize(index);
@@ -134,28 +139,51 @@ const ProductDetails = () => {
         setProductQuantity(val)
     }
 
+    const handlePincodeChange = (e) => {
+        setPincode(e.target.value);
+        setPincodeError('');
+        setIsDeliverablePincode(false);
+    };
+
+    const checkPincode = async () => {
+        try {
+            const response = await fetchDataFromApi(`/api/products/check-pincode/${productData.id}?pincode=${pincode}`);
+            if (response.isDeliverable) {
+                setIsDeliverablePincode(true);
+                setPincodeError('');
+            } else {
+                setIsDeliverablePincode(false);
+                setPincodeError('Delivery not available to this pincode');
+            }
+        } catch (error) {
+            console.error('Error checking pincode:', error);
+            setPincodeError('Error checking pincode. Please try again.');
+        }
+    };
+
     const addtoCart = () => {
-
         if (activeSize !== null) {
+            if (isDeliverablePincode) {
+                const user = JSON.parse(localStorage.getItem("user"));
 
-            const user = JSON.parse(localStorage.getItem("user"));
+                cartFields.productTitle = productData?.name;
+                cartFields.image = productData?.images[0];
+                cartFields.rating = productData?.rating;
+                cartFields.price = productData?.price;
+                cartFields.quantity = productQuantity;
+                cartFields.subTotal = parseInt(productData?.price * productQuantity);
+                cartFields.productId = productData?.id;
+                cartFields.countInStock = productData?.countInStock;
+                cartFields.productWeight = productData?.productWeight[0];
+                cartFields.userId = user?.userId;
 
-            cartFields.productTitle = productData?.name
-            cartFields.image = productData?.images[0]
-            cartFields.rating = productData?.rating
-            cartFields.price = productData?.price
-            cartFields.quantity = productQuantity
-            cartFields.subTotal = parseInt(productData?.price * productQuantity)
-            cartFields.productId = productData?.id
-            cartFields.countInStock = productData?.countInStock
-            cartFields.productWeight= productData?.productWeight[0]
-            cartFields.userId = user?.userId
-
-            context.addToCart(cartFields);
+                context.addToCart(cartFields);
+            } else {
+                setPincodeError('Please enter a deliverable pincode');
+            }
         } else {
             setTabError(true);
         }
-
     }
 
     const selectedItem = () => {
@@ -188,11 +216,8 @@ const ProductDetails = () => {
             }
             postData(`/api/my-list/add/`, data).then((res) => {
                 if (res.status !== false) {
-                    context.setAlertBox({
-                        open: true,
-                        error: false,
-                        msg: "the product added in my list"
-                    })
+                    swal.fire("success","Product added to wishlist!","success")
+                    
 
             
                     fetchDataFromApi(`/api/my-list?productId=${id}&userId=${user?.userId}`).then((res) => {
@@ -316,7 +341,7 @@ const ProductDetails = () => {
                                         {
                                             productData?.productWeight?.map((item, index) => {
                                                 return (
-                                                    <li className='list-inline-item'><a className={`tag ${activeSize === index ? 'active' : ''}`} onClick={() => isActive(index)}>{item}</a></li>
+                                                    <li className='list-inline-item'><a id="weightchoose" className={`tag ${activeSize === index ? 'active' : ''}`} onClick={() => isActive(index)}>{item}</a></li>
                                                 )
                                             })
                                         }
@@ -326,13 +351,84 @@ const ProductDetails = () => {
                             }
 
 
+                            {/* Add pincode input after the product weight section */}
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                marginTop: '20px',
+                                marginBottom: '20px',
+                                width: '100%',
+                                maxWidth: '300px'
+                            }}>
+                                <div style={{ display: 'flex' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Pincode"
+                                        id="enterpincode"
+                                        value={pincode}
+                                        onChange={handlePincodeChange}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px',
+                                            borderRadius: '5px 0 0 5px',
+                                            border: '1px solid #ccc',
+                                            borderRight: 'none',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                    <Button 
+                                        onClick={checkPincode} 
+                                        id="checkpincode"
+                                        style={{ 
+                                            padding: '10px 15px',
+                                            borderRadius: '0 5px 5px 0',
+                                            border: 'none',
+                                            backgroundColor: '#6d4aae',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        Check
+                                    </Button>
+                                </div>
+                                {pincodeError && (
+                                    <span style={{ 
+                                        marginTop: '5px',
+                                        fontSize: '14px',
+                                        color: 'red'
+                                    }}>
+                                        {pincodeError}
+                                    </span>
+                                )}
+                                {isDeliverablePincode && (
+                                    <span style={{ 
+                                        marginTop: '5px',
+                                        fontSize: '14px',
+                                        color: 'green'
+                                    }}>
+                                        Delivery available to this pincode
+                                    </span>
+                                )}
+                            </div>
+
                             <div className="d-flex align-items-center mt-3 actions_">
                             {productData?.countInStock > 0 && ( // Conditionally render QuantityBox
                                 <QuantityBox quantity={quantity} item={productData} selectedItem={selectedItem} />
                             )}
                                 <div className="d-flex align-items-center btnActions">
                                     {productData?.countInStock > 0 && (
-                                        <Button className="btn-blue btn-lg btn-big btn-round bg-red" onClick={() => addtoCart()}>
+                                        <Button 
+                                            className="btn-blue btn-lg btn-big btn-round bg-red" 
+                                            id="addtocart"
+                                            onClick={() => addtoCart()}
+                                            disabled={!isDeliverablePincode}
+                                            style={{
+                                                opacity: isDeliverablePincode ? 1 : 0.6,
+                                                cursor: isDeliverablePincode ? 'pointer' : 'not-allowed'
+                                            }}
+                                        >
                                             <BsCartFill /> &nbsp;
                                             {context.addingInCart === true ? "adding..." : " Add to cart"}
                                         </Button>
@@ -350,11 +446,11 @@ const ProductDetails = () => {
                                         </Button>
                                     </Tooltip>
 
-                                    <Tooltip title="Add to Compare" placement="top">
+                                    {/* <Tooltip title="Add to Compare" placement="top">
                                         <Button className="btn-blue btn-lg btn-big btn-circle ml-2">
                                             <MdOutlineCompareArrows />
                                         </Button>
-                                    </Tooltip>
+                                    </Tooltip> */}
 
                                 </div>
 

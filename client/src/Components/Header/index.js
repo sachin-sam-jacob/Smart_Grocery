@@ -168,7 +168,7 @@ const Header = () => {
 
                                             <div className='position-relative ml-2'>
                                                 <Link to="/cart">
-                                                    <Button className='circle'><IoBagOutline /></Button>
+                                                    <Button className='circle' id="cart"><IoBagOutline /></Button>
                                                     <span className='count d-flex align-items-center justify-content-center'>{context.cartData?.length > 0 ? context.cartData?.length : 0}</span>
                                                 </Link>
                                             </div>

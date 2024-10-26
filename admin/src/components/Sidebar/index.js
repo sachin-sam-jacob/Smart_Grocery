@@ -7,25 +7,19 @@ import { MdMessage } from "react-icons/md";
 import { FaBell } from "react-icons/fa6";
 import { IoIosSettings } from "react-icons/io";
 import { Link, NavLink } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { IoMdLogOut } from "react-icons/io";
 import { MyContext } from '../../App';
 import { FaClipboardCheck } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager icon
 
 const Sidebar = () => {
-
     const [activeTab, setActiveTab] = useState(0);
     const [isToggleSubmenu, setIsToggleSubmenu] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
 
     const context = useContext(MyContext);
-
-    const isOpenSubmenu = (index) => {
-        setActiveTab(index);
-        setIsToggleSubmenu(!isToggleSubmenu)
-    }
     const history = useNavigate();
 
     useEffect(() => {
@@ -38,20 +32,21 @@ const Sidebar = () => {
         }
     }, []);
 
+    const isOpenSubmenu = (index) => {
+        setActiveTab(index);
+        setIsToggleSubmenu(!isToggleSubmenu)
+    }
 
     const logout = () => {
         localStorage.clear();
-
         context.setAlertBox({
             open: true,
             error: false,
-            msg: "Logout successfull"
-        })
-
+            msg: "Logout successful"
+        });
         setTimeout(() => {
             history("/login");
         }, 2000);
-
     }
 
     return (
@@ -77,15 +72,15 @@ const Sidebar = () => {
                             <ul className='submenu'>
                                 <li><NavLink exact activeClassName='is-active' to="/products">Product List</NavLink></li>
                                
-                                <li><NavLink exact activeClassName='is-active' to="/product/upload">Product Upload</NavLink></li>
+                                {/* <li><NavLink exact activeClassName='is-active' to="/product/upload">Product Upload</NavLink></li>
                                 <li><NavLink exact activeClassName='is-active' to="/productRAMS/add">Add Product RAMS</NavLink></li>
                                 <li><NavLink exact activeClassName='is-active' to="/productWEIGHT/add">Add Product WEIGHT</NavLink></li>
-                                <li><NavLink exact activeClassName='is-active' to="/productSIZE/add">Add Product SIZE</NavLink></li>
+                                <li><NavLink exact activeClassName='is-active' to="/productSIZE/add">Add Product SIZE</NavLink></li> */}
                             </ul>
                         </div>
                     </li>
 
-                    <li>
+                    {/* <li>
                         <Button className={`w-100 ${activeTab === 2 && isToggleSubmenu === true ? 'active' : ''}`} onClick={() => isOpenSubmenu(2)}>
                             <span className='icon'><FaProductHunt /></span>
                             Category
@@ -99,7 +94,7 @@ const Sidebar = () => {
                                 <li><Link to="/subCategory/add">Add a sub category</Link></li>
                             </ul>
                         </div>
-                    </li>
+                    </li> */}
 
                     <li>
                         <NavLink exact activeClassName='is-active' to="/orders">
@@ -141,6 +136,22 @@ const Sidebar = () => {
                         </div>
                     </li>
 
+                    {/* New Stock Manager section */}
+                    <li>
+                        <Button className={`w-100 ${activeTab === 6 && isToggleSubmenu === true ? 'active' : ''}`} onClick={() => isOpenSubmenu(6)}>
+                            <span className='icon'><FaWarehouse /></span>
+                            District Operation Manager
+                            <span className='arrow'><FaAngleRight /></span>
+                        </Button>
+                        <div className={`submenuWrapper ${activeTab === 6 && isToggleSubmenu === true ? 'colapse' : 'colapsed'}`}>
+                            <ul className='submenu'>
+                                <li><NavLink exact activeClassName='is-active' to="/stockManager/add">Add District Operation Managers</NavLink></li>
+                                <li><NavLink exact activeClassName='is-active' to="/stockManager/list">List District Operation Managers</NavLink></li>
+                                {/* <li><NavLink exact activeClassName='is-active' to="/stockManager/approve">Approve Stock Managers</NavLink></li> */}
+                                <li><NavLink exact activeClassName='is-active' to="/stockManager/manage">Manage District Operation Managers</NavLink></li>
+                            </ul>
+                        </div>
+                    </li>
 
                 </ul>
 

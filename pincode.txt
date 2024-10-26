@@ -1,0 +1,289 @@
+
+//PincodeManagement.js
+import React, { useState, useEffect } from 'react';
+import { fetchDataFromApi, postData } from "../../utils/api";
+
+const PincodeManagement = () => {
+    const [pincodes, setPincodes] = useState([]);
+    const [newPincode, setNewPincode] = useState({ code: '', district: '', isDeliverable: true });
+
+    useEffect(() => {
+        fetchPincodes();
+    }, []);
+
+    const fetchPincodes = async () => {
+        try {
+            const data = await fetchDataFromApi('/api/pincodes');
+            setPincodes(data);
+        } catch (error) {
+            console.error('Error fetching pincodes:', error);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setNewPincode(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const addPincode = async (e) => {
+        e.preventDefault();
+        try {
+            await postData('/api/pincodes/add', newPincode);
+            setNewPincode({ code: '', district: '', isDeliverable: true });
+            fetchPincodes();
+        } catch (error) {
+            console.error('Error adding pincode:', error);
+        }
+    };
+
+    return (
+        <div>
+            <h2>Pincode Management</h2>
+            <form onSubmit={addPincode}>
+                <input
+                    type="text"
+                    name="code"
+                    value={newPincode.code}
+                    onChange={handleInputChange}
+                    placeholder="Pincode"
+                    required
+                />
+                <input
+                    type="text"
+                    name="district"
+                    value={newPincode.district}
+                    onChange={handleInputChange}
+                    placeholder="District"
+                    required
+                />
+                <label>
+                    <input
+                        type="checkbox"
+                        name="isDeliverable"
+                        checked={newPincode.isDeliverable}
+                        onChange={handleInputChange}
+                    />
+                    Is Deliverable
+                </label>
+                <button type="submit">Add Pincode</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pincode</th>
+                        <th>District</th>
+                        <th>Deliverable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {pincodes.map(pincode => (
+                        <tr key={pincode._id}>
+                            <td>{pincode.code}</td>
+                            <td>{pincode.district}</td>
+                            <td>{pincode.isDeliverable ? 'Yes' : 'No'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+export default PincodeManagement;
+
+
+
+//productDetails.js
+import React, { useContext, useEffect, useState } from "react";
+// ... (existing imports)
+import { fetchDataFromApi } from "../../utils/api";
+
+const ProductDetails = () => {
+    // ... (existing state variables)
+    const [pincode, setPincode] = useState('');
+    const [pincodeError, setPincodeError] = useState('');
+    const [isDeliverablePincode, setIsDeliverablePincode] = useState(false);
+    const [pincodeDistrict, setPincodeDistrict] = useState('');
+
+    // ... (existing useEffect and functions)
+
+    const handlePincodeChange = (e) => {
+        setPincode(e.target.value);
+        setPincodeError('');
+        setIsDeliverablePincode(false);
+        setPincodeDistrict('');
+    };
+
+    const checkPincode = async () => {
+        try {
+            const response = await fetchDataFromApi(`/api/pincodes/check/${pincode}`);
+            if (response.isDeliverable) {
+                setIsDeliverablePincode(true);
+                setPincodeDistrict(response.district);
+                setPincodeError('');
+            } else {
+                setIsDeliverablePincode(false);
+                setPincodeError('Delivery not available to this pincode');
+            }
+        } catch (error) {
+            console.error('Error checking pincode:', error);
+            setPincodeError('Error checking pincode. Please try again.');
+        }
+    };
+
+    // Modify addtoCart function to use isDeliverablePincode
+    const addtoCart = () => {
+        if (activeSize !== null) {
+            if (isDeliverablePincode) {
+                // ... (existing cart logic)
+            } else {
+                setPincodeError('Please enter a deliverable pincode');
+            }
+        } else {
+            setTabError(true);
+        }
+    };
+
+    return (
+        <>
+            <section className="productDetails section">
+                <div className="container">
+                    {/* ... (existing JSX) */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                        width: '100%',
+                        maxWidth: '300px'
+                    }}>
+                        <div style={{ display: 'flex' }}>
+                            <input
+                                type="text"
+                                placeholder="Enter Pincode"
+                                value={pincode}
+                                onChange={handlePincodeChange}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    borderRadius: '5px 0 0 5px',
+                                    border: '1px solid #ccc',
+                                    borderRight: 'none',
+                                    fontSize: '14px'
+                                }}
+                            />
+                            <Button 
+                                onClick={checkPincode} 
+                                style={{ 
+                                    padding: '10px 15px',
+                                    borderRadius: '0 5px 5px 0',
+                                    border: 'none',
+                                    backgroundColor: '#6d4aae',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Check
+                            </Button>
+                        </div>
+                        {pincodeError && (
+                            <span style={{ 
+                                marginTop: '5px',
+                                fontSize: '14px',
+                                color: 'red'
+                            }}>
+                                {pincodeError}
+                            </span>
+                        )}
+                        {isDeliverablePincode && (
+                            <span style={{ 
+                                marginTop: '5px',
+                                fontSize: '14px',
+                                color: 'green'
+                            }}>
+                                Delivery available to {pincodeDistrict}
+                            </span>
+                        )}
+                    </div>
+                    {/* ... (rest of the existing JSX) */}
+                </div>
+            </section>
+        </>
+    );
+};
+
+export default ProductDetails;
+
+//routes
+const express = require('express');
+const router = express.Router();
+const pincodeController = require('../controllers/pincodeController');
+
+router.post('/add', pincodeController.addPincode);
+router.get('/', pincodeController.getPincodes);
+router.get('/check/:code', pincodeController.checkPincode);
+
+module.exports = router;
+
+//backend code
+const Pincode = require('../models/Pincode');
+
+exports.addPincode = async (req, res) => {
+  try {
+    const newPincode = new Pincode(req.body);
+    await newPincode.save();
+    res.status(201).json(newPincode);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.getPincodes = async (req, res) => {
+  try {
+    const pincodes = await Pincode.find();
+    res.json(pincodes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.checkPincode = async (req, res) => {
+  try {
+    const pincode = await Pincode.findOne({ code: req.params.code });
+    if (pincode && pincode.isDeliverable) {
+      res.json({ isDeliverable: true, district: pincode.district });
+    } else {
+      res.json({ isDeliverable: false });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+//pincode model(Pincode.js)
+
+const mongoose = require('mongoose');
+
+const pincodeSchema = new mongoose.Schema({
+  code: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  district: {
+    type: String,
+    required: true
+  },
+  isDeliverable: {
+    type: Boolean,
+    default: true
+  }
+});
+
+module.exports = mongoose.model('Pincode', pincodeSchema);

@@ -13,6 +13,7 @@
     "axios": "^1.6.8",
     "bootstrap": "^4.6.0",
     "dotenv": "^16.4.5",
+    "firebase": "^10.11.1",
     "notistack": "^3.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -26,9 +27,9 @@
     "react-slick": "^0.30.2",
     "react-tag-input-component": "^2.0.2",
     "react-top-loading-bar": "^2.3.1",
+    "sweetalert2": "^11.14.3",
     "swiper": "^11.1.0",
-    "web-vitals": "^2.1.4",
-    "firebase": "^10.11.1"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "set PORT=3002 && react-scripts start",

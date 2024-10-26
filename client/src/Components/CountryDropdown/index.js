@@ -7,6 +7,7 @@ import { MdClose } from "react-icons/md";
 import Slide from '@mui/material/Slide';
 import { MyContext } from '../../App';
 import { districtsInKerala } from '../../data/districts'; // Import the districts data
+import { isDeliverable } from '../../data/pincode';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -16,6 +17,8 @@ const CountryDropdown = () => {
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [selectedTab, setSelectedTab] = useState(null);
     const [districtList, setDistrictList] = useState(districtsInKerala); // Initialize with districts in Kerala
+    const [pincode, setPincode] = useState('');
+    const [pincodeError, setPincodeError] = useState('');
 
     const context = useContext(MyContext);
 
@@ -42,6 +45,20 @@ const CountryDropdown = () => {
             setDistrictList(districtsInKerala); // Reset to original list
         }
     }
+
+    const handlePincodeChange = (e) => {
+        setPincode(e.target.value);
+        setPincodeError('');
+    };
+
+    const checkPincode = () => {
+        if (isDeliverable(context.selectedCountry, pincode)) {
+            context.setDeliverablePincode(pincode);
+            setIsOpenModal(false);
+        } else {
+            setPincodeError('Enter a deliverable pincode');
+        }
+    };
 
     return (
         <>
@@ -142,6 +159,25 @@ const CountryDropdown = () => {
                             </li>
                         ))}
                     </ul>
+                    {context.selectedCountry && (
+                        <div style={{ marginTop: '20px' }}>
+                            <input
+                                type="text"
+                                placeholder="Enter Pincode"
+                                value={pincode}
+                                onChange={handlePincodeChange}
+                                style={{
+                                    width: 'calc(100% - 100px)',
+                                    padding: '10px',
+                                    borderRadius: '5px',
+                                    border: '1px solid #ccc',
+                                    marginRight: '5px',
+                                }}
+                            />
+                            <Button onClick={checkPincode} style={{ padding: '10px', width: '95px' }}>Check</Button>
+                            {pincodeError && <span style={{ color: 'red', display: 'block', marginTop: '5px' }}>{pincodeError}</span>}
+                        </div>
+                    )}
                 </div>
             </Dialog>
         </>

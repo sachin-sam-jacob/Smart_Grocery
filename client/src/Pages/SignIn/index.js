@@ -3,7 +3,7 @@ import Logo from "../../assets/images/MainLogo.png";
 import { MyContext } from "../../App";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import GoogleImg from "../../assets/images/googleImg.png";
 import CircularProgress from "@mui/material/CircularProgress";
 import { postData } from "../../utils/api";
@@ -16,8 +16,15 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const context = useContext(MyContext);
   const navigate = useNavigate(); // useNavigate instead of history
+  const location = useLocation();
 
   useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Redirect to home page if already logged in
+      navigate("/", { replace: true });
+    }
     context.setisHeaderFooterShow(false);
   }, []);
 
@@ -31,6 +38,31 @@ const SignIn = () => {
       ...formfields,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const handleSuccessfulLogin = (user, token, isAdmin, isStockManager) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    context.setAlertBox({
+      open: true,
+      error: false,
+      msg: "Login successful!",
+    });
+
+    context.setIsLogin(true);
+    setIsLoading(false);
+
+    // Use replace: true to prevent going back to login page
+    setTimeout(() => {
+      if (isAdmin) {
+        window.location.replace("http://localhost:3002/");
+      } else if (isStockManager) {
+        window.location.replace("/stockmanager-dashboard");
+      } else {
+        window.location.replace("/");
+      }
+    }, 2000);
   };
 
   const login = (e) => {
@@ -58,54 +90,25 @@ const SignIn = () => {
     postData("/api/user/signin", formfields).then((res) => {
       try {
         if (res.error !== true) {
-          localStorage.setItem("token", res.token);
-
           const user = {
             name: res.user?.name,
             email: res.user?.email,
             userId: res.user?.id,
-            isAdmin: res.user?.isAdmin, // Store isAdmin status
+            isStockManager: res.user?.isStockManager,
+            location: res.user?.location,
           };
 
-          localStorage.setItem("user", JSON.stringify(user));
-
+          handleSuccessfulLogin(user, res.token, res.user.isAdmin, res.user.isStockManager);
+        } else {
+          // Handle error messages
           context.setAlertBox({
             open: true,
-            error: false,
+            error: true,
             msg: res.msg,
           });
-
-          setTimeout(() => {
-            context.setIsLogin(true);
-            setIsLoading(false);
-            context.setisHeaderFooterShow(true);
-
-            // Redirect based on isAdmin status
-            if (user.isAdmin) {
-              window.location.href = "http://localhost:3002/"; // Redirect to admin page
-            } else {
-              navigate("/"); // Redirect to user home page
-            }
-          }, 2000);
-        } else {
-          // Handle blocked user message
-          if (res.msg === "User is blocked by the admin due to unauthorized activities.") {
-            context.setAlertBox({
-              open: true,
-              error: true,
-              msg: "Your account is blocked. Please contact support for further assistance.",
-            });
-          } else {
-            context.setAlertBox({
-              open: true,
-              error: true,
-              msg: res.msg,
-            });
-          }
           setIsLoading(false);
         }
-      } 
-      catch (error) {
+      } catch (error) {
         console.log(error);
         setIsLoading(false);
       }
@@ -130,28 +133,13 @@ const SignIn = () => {
         postData("/api/user/authWithGoogle", fields).then((res) => {
           try {
             if (res.error !== true) {
-              localStorage.setItem("token", res.token);
-
               const user = {
                 name: res.user?.name,
                 email: res.user?.email,
                 userId: res.user?.id,
               };
 
-              localStorage.setItem("user", JSON.stringify(user));
-
-              context.setAlertBox({
-                open: true,
-                error: false,
-                msg: res.msg,
-              });
-
-              setTimeout(() => {
-                navigate("/"); // Use navigate instead of history
-                context.setIsLogin(true);
-                setIsLoading(false);
-                context.setisHeaderFooterShow(true);
-              }, 2000);
+              handleSuccessfulLogin(user, res.token, res.user.isAdmin, res.user.isStockManager);
             } else {
               context.setAlertBox({
                 open: true,

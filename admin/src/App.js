@@ -31,6 +31,10 @@ import LoadingBar from 'react-top-loading-bar'
 import { fetchDataFromApi } from './utils/api';
 import UserDetails from './pages/User/UserDetails';
 import axios from 'axios';
+import AddStockManager from './pages/StockManager/AddStockManager';
+import ApproveStockManagers from './pages/StockManager/ApproveStockManagers';
+import ListStockManagers from './pages/StockManager/ListStockManagers';
+import ManageStockManagers from './pages/StockManager/ManageStockManagers';
 
 
 const MyContext = createContext();
@@ -217,6 +221,10 @@ function App() {
               <Route path="/user/list" exact={true} element={<UserList />} />
               <Route path="/user/details/:id" element={<UserDetails />} /> 
               <Route path="/user/blockedUsers" exact={true} element={<BlockedUserList />} />
+              <Route path="/stockManager/add" exact={true} element={<AddStockManager/>}/>
+              <Route path="/stockManager/list" exact={true} element={<ListStockManagers/>}/>
+              <Route path="/stockManager/approve" exact={true} element={<ApproveStockManagers/>}/>
+              <Route path="/stockManager/manage" exact={true} element={<ManageStockManagers/>}/>
             </Routes>
           </div>
         </div>

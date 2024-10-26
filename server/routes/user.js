@@ -122,8 +122,8 @@ router.post(`/signin`, async (req, res) => {
             return res.status(400).json({ error: true, msg: "Incorrect password" });
         }
 
-        const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
-
+        const token = jwt.sign({ email: existingUser.email, id: existingUser._id,location: existingUser.location }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        console.log("ex",existingUser);
         return res.status(200).send({
             user: existingUser,
             token: token,

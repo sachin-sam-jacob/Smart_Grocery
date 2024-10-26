@@ -42,7 +42,19 @@ const userSchema = mongoose.Schema({
     resetCodeExpiration: {
         type: Date,
         default: Date.now
-    }
+    },
+    isStockManager:{
+        type:Boolean,
+        default:false,
+    },
+    location:{
+        type:String,
+        default:''
+    },
+    role: {
+        type: String,
+        default: 'customer'
+      }
 });
 
 userSchema.virtual('id').get(function () {

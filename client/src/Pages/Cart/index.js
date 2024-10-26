@@ -155,7 +155,7 @@ const Cart = () => {
                                     </div>
                                     <br />
                                     <Link to="/checkout">
-                                        <Button className='btn-blue bg-red btn-lg btn-big'><IoBagCheckOutline /> &nbsp; Checkout</Button>
+                                        <Button className='btn-blue bg-red btn-lg btn-big' id="checkout"><IoBagCheckOutline /> &nbsp; Checkout</Button>
                                     </Link>
                                 </div>
                             </div>
