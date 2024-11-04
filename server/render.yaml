@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: server
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PASSWORD
+        value: "Sachin@2003"
+      - key: EMAIL
+        value: "sachinsamjacob2025@mca.ajce.in"
+      - key: JSON_WEB_TOKEN_SECRET_KEY
+        value: "sachin1245"
+      - key: cloudinary_Config_api_secret
+        value: "Y_67aIYNPIMx86kWwOY8ln50mPc"
+      - key: cloudinary_Config_api_key
+        value: "546575113327258"
+      - key: cloudinary_Config_Cloud_Name
+        value: "dmgxwpubt"
+      - key: CONNECTION_STRING
+        value: "mongodb+srv://sachinsamkonil:project2024@cluster0.z17lb.mongodb.net/ecommerce?retryWrites=true&w=majority&appName=Cluster0"
+      - key: CLIENT_BASE_URL
+        value: "http://localhost:3006"
+      - key: PORT
+        value: "8000"
+    region: singapore
+version: "1"
