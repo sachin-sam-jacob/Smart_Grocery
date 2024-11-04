@@ -23,10 +23,10 @@ const SignIn = () => {
     const token = localStorage.getItem("token");
     if (token) {
       // Redirect to home page if already logged in
-      navigate("/", { replace: true });
+      window.location.replace("/");
     }
     context.setisHeaderFooterShow(false);
-  }, []);
+  }, [navigate]);
 
   const [formfields, setFormfields] = useState({
     email: "",

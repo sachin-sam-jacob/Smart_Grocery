@@ -43,8 +43,8 @@ const Login = () => {
         const token = localStorage.getItem("token");
         if (token !== "" && token !== undefined && token !== null) {
             setIsLogin(true);
-            history("/");
-        }
+            window.location.replace('/');
+            }
         else {
             history("/login");
         }
