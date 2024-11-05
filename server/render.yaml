@@ -2,9 +2,12 @@ services:
   - type: web
     name: server
     env: node
+    rootDir: server  # Add this line
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: npm start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: PASSWORD
         value: "Sachin@2003"
       - key: EMAIL
@@ -20,8 +23,10 @@ services:
       - key: CONNECTION_STRING
         value: "mongodb+srv://sachinsamkonil:project2024@cluster0.z17lb.mongodb.net/ecommerce?retryWrites=true&w=majority&appName=Cluster0"
       - key: CLIENT_BASE_URL
-        value: "http://localhost:3006"
+        value: "https://your-frontend-url.vercel.app"
       - key: PORT
         value: "8000"
+    healthCheckPath: /health
+    autoDeploy: true
     region: singapore
 version: "1"
