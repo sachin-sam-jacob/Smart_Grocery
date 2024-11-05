@@ -58,7 +58,7 @@ const ForgotPassword = () => {
                     Reset Password
                 </Button>
                 <Button
-                    onClick={() => navigate('/')}
+                    onClick={() => window.location.replace('/signin')}
                     variant="outlined"
                     color="secondary"
                     style={styles.cancelButton}

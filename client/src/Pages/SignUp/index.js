@@ -26,6 +26,7 @@ const SignUp = () => {
     email: "",
     phone: "",
     password: "",
+    confirmPassword: "", // Add confirm password field
     isAdmin: false,
   });
 
@@ -34,7 +35,10 @@ const SignUp = () => {
     email: "",
     phone: "",
     password: "",
+    confirmPassword: "", // Add confirm password error
   });
+
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Add state for confirm password visibility
 
   const context = useContext(MyContext);
   const history = useNavigate();
@@ -72,6 +76,12 @@ const SignUp = () => {
       : "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character.";
   };
 
+  const validateConfirmPassword = (confirmPassword) => {
+    return confirmPassword === formfields.password 
+      ? "" 
+      : "Passwords do not match";
+  };
+
   const onchangeInput = (e) => {
     const { name, value } = e.target;
 
@@ -106,6 +116,14 @@ const SignUp = () => {
           password: validatePassword(value),
         }));
         break;
+      case "confirmPassword":
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: value === "" 
+            ? "Confirm Password cannot be blank." 
+            : validateConfirmPassword(value),
+        }));
+        break;
       default:
         break;
     }
@@ -117,6 +135,7 @@ const SignUp = () => {
     const phoneError = validatePhone(formfields.phone);
     const passwordError = validatePassword(formfields.password);
     const emailError = validateEmail(formfields.email);
+    const confirmPasswordError = validateConfirmPassword(formfields.confirmPassword);
 
     if (formfields.name === "") {
       context.setAlertBox({
@@ -150,6 +169,15 @@ const SignUp = () => {
         open: true,
         error: true,
         msg: passwordError,
+      });
+      return false;
+    }
+
+    if (confirmPasswordError) {
+      context.setAlertBox({
+        open: true,
+        error: true,
+        msg: confirmPasswordError,
       });
       return false;
     }
@@ -258,20 +286,36 @@ const SignUp = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   return (
-    <section className="section signInPage signUpPage">
+    <section className="section signInPage">
       <div className="shape-bottom">
-        {/* SVG for background */}
+        <svg
+          fill="#fff"
+          id="Layer_1"
+          x="0px"
+          y="0px"
+          viewBox="0 0 1921 819.8"
+          style={{ enableBackground: "new 0 0 1921 819.8" }}
+        >
+          <path
+            className="st0"
+            d="M1921,413.1v406.7H0V0.5h0.4l228.1,598.3c30,74.4,80.8,130.6,152.5,168.6c107.6,57,212.1,40.7,245.7,34.4 c22.4-4.2,54.9-13.1,97.5-26.6L1921,400.5V413.1z"
+          ></path>
+        </svg>
       </div>
 
-      <div className="container" style={{fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'}}>
+      <div className="container">
         <div className="box card p-3 shadow border-0">
           <div className="text-center">
-            <img style={{ width: "130px", height: "50px" }} src={Logo} />
+            <img style={{width:'130px',height:'50px'}} src={Logo} alt="Logo" />
           </div>
 
-          <form className="mt-2" onSubmit={register}>
-            <h2 className="mb-3">Sign Up</h2>
+          <form className="mt-3" onSubmit={register}>
+            <h2 className="mb-4">Sign Up</h2>
 
             <div className="row">
               <div className="col-md-6">
@@ -340,47 +384,65 @@ const SignUp = () => {
               />
             </div>
 
-            <div className="mt-3 text-center">
-              <Button
-                type="submit"
-                className="btn btn-primary w-100"
+            <div className="form-group">
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                onChange={onchangeInput}
+                type={showConfirmPassword ? "text" : "password"}
+                variant="standard"
+                className="w-100"
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={handleClickShowConfirmPassword}>
+                        {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </div>
+
+            <div className="d-flex align-items-center mt-3 mb-3">
+              <Button 
+                type="submit" 
+                className="btn-blue col btn-lg btn-big"
                 disabled={isLoading}
-                style={{backgroundColor:'#0BDA51',color:'white',fontSize:'15px',fontWeight:'bolder'
-                }}
               >
-                {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
+                {isLoading ? <CircularProgress /> : "Sign Up"}
               </Button>
+              <Link to="/">
+                <Button
+                  className="btn-lg btn-big col ml-3"
+                  variant="outlined"
+                  onClick={() => context.setisHeaderFooterShow(true)}
+                >
+                  Cancel
+                </Button>
+              </Link>
             </div>
 
-            <div className="text-center my-3">
-              <span>or</span>
-            </div>
+            <p className="txt">
+              Already have an account?{" "}
+              <Link to="/signIn" className="border-effect">
+                Sign In
+              </Link>
+            </p>
 
-            <div className="googleBtnContainer" style={{ maxWidth: '200px', margin: '0 auto' }}>
-              <Button
-                onClick={signInWithGoogle}
-                variant="outlined"
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  borderRadius: '20px',
-                  borderColor: '#0BDA51',
-                  color: '#0BDA51',
-                  backgroundColor: 'white',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0BDA51'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
-              >
-                <img src={GoogleImg} alt="google" style={{ width: '20px', height: '20px', marginRight: '5px' }} />
-                Continue with Google
-              </Button>
-            </div>
+            <h6 className="mt-4 text-center font-weight-bold">
+              Or continue with social account
+            </h6>
 
-            <div className="mt-3 text-center">
-              <Link to="/signIn">Already have an account? Sign In</Link>
-            </div>
+            <Button
+              className="loginWithGoogle mt-2"
+              variant="outlined"
+              onClick={signInWithGoogle}
+            >
+              <img src={GoogleImg} alt="Google" /> Sign Up with Google
+            </Button>
           </form>
         </div>
       </div>

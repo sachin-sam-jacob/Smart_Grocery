@@ -110,4 +110,47 @@ router.post('/:district/:oldPincode', async (req, res) => {
     }
 });
 
+// Add this new route
+router.get('/check/:pincode', async (req, res) => {
+    try {
+      console.log("Entered")
+        const { pincode } = req.params;
+        
+        // Input validation
+        if (!pincode || pincode.length !== 6) {
+            return res.json({
+                error: true,
+                msg: 'Please enter a valid 6-digit pincode'
+            });
+        }
+
+        const district = await District.findOne({
+            'pincodes.code': pincode
+        });
+
+        if (district) {
+            const pincodeDetails = district.pincodes.find(p => p.code === pincode);
+            return res.json({
+                error: false,
+                found: true,
+                district: district.name,
+                place: pincodeDetails.place,
+                msg: 'Delivery available to this location'
+            });
+        } else {
+            return res.json({
+                error: false,
+                found: false,
+                msg: 'This pincode is not serviceable'
+            });
+        }
+    } catch (error) {
+        console.error('Server error:', error);
+        return res.json({
+            error: true,
+            msg: 'Error checking pincode'
+        });
+    }
+});
+
 module.exports = router;

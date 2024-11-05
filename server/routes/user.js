@@ -71,7 +71,6 @@ cloudinary.config({
     const { name, phone, email, password, isAdmin } = req.body;
 
     try {
-
         const existingUser = await User.findOne({ email: email });
         const existingUserByPh = await User.findOne({ phone: phone });
 
@@ -79,12 +78,13 @@ cloudinary.config({
             res.status(400).json({ error: true, msg: "User already exists!" });
         }
 
-        // No password hashing here
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const result = await User.create({
             name: name,
             phone: phone,
             email: email,
-            password: password,  // Store password as plain text
+            password: hashedPassword,
             isAdmin: isAdmin
         });
 
@@ -112,18 +112,17 @@ router.post(`/signin`, async (req, res) => {
             return res.status(404).json({ error: true, msg: "User not found!" });
         }
 
-        // Check if user is blocked
         if (existingUser.isBlocked) {
             return res.status(403).json({ error: true, msg: "User is blocked by the admin due to unauthorized activities." });
         }
 
-        // Compare plain text passwords directly
-        if (password !== existingUser.password) {
+        const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+        if (!isPasswordCorrect) {
             return res.status(400).json({ error: true, msg: "Incorrect password" });
         }
 
-        const token = jwt.sign({ email: existingUser.email, id: existingUser._id,location: existingUser.location }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
-        console.log("ex",existingUser);
+        const token = jwt.sign({ email: existingUser.email, id: existingUser._id, location: existingUser.location }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        
         return res.status(200).send({
             user: existingUser,
             token: token,
@@ -134,9 +133,6 @@ router.post(`/signin`, async (req, res) => {
         res.status(500).json({ error: true, msg: "Something went wrong" });
     }
 });
-
-
-
 
 router.post(`/authWithGoogle`, async (req, res) => {
     const {name, phone, email, password, images, isAdmin} = req.body;
@@ -184,6 +180,7 @@ router.post(`/authWithGoogle`, async (req, res) => {
 
 
 
+
 router.put(`/changePassword/:id`, async (req, res) => {
     const { name, phone, email, password, newPass, images } = req.body;
 
@@ -192,11 +189,14 @@ router.put(`/changePassword/:id`, async (req, res) => {
         return res.status(404).json({ error: true, msg: "User not found!" });
     }
 
-    // Compare plain text passwords
-    if (password !== existingUser.password) {
+    const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+    if (!isPasswordCorrect) {
         return res.send({ error: true, msg: "Current password is incorrect" });
     } else {
-        let newPassword = newPass ? newPass : existingUser.password;
+        let newPassword = existingUser.password;
+        if (newPass) {
+            newPassword = await bcrypt.hash(newPass, 10);
+        }
 
         const user = await User.findByIdAndUpdate(
             req.params.id,
@@ -204,7 +204,7 @@ router.put(`/changePassword/:id`, async (req, res) => {
                 name: name,
                 phone: phone,
                 email: email,
-                password: newPassword, // Store plain text password
+                password: newPassword,
                 images: images,
             },
             { new: true }

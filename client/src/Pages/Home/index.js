@@ -45,10 +45,7 @@ const Home = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      // Redirect to login page if not logged in
-      navigate("/signin", { replace: true });
-    } else {
+    
       window.scrollTo(0, 0);
 
       setselectedCat(context.categoryData[0]?.name);
@@ -72,7 +69,7 @@ const Home = () => {
       fetchDataFromApi("/api/homeBanner").then((res) => {
         setHomeSlides(res);
       });
-    }
+    
   }, [navigate]);
 
   useEffect(() => {

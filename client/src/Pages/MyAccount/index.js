@@ -253,48 +253,67 @@ const MyAccount = () => {
 
   const changePassword = (e) => {
     e.preventDefault();
-    formdata.append("password", fields.password);
 
-    if (
-      fields.oldPassword !== "" &&
-      fields.password !== "" &&
-      fields.confirmPassword !== ""
-    ) {
-      if (fields.password !== fields.confirmPassword) {
-        context.setAlertBox({
-          open: true,
-          error: true,
-          msg: "Password and confirm password not match",
-        });
-      } else {
+    if (fields.oldPassword !== "" && fields.password !== "" && fields.confirmPassword !== "") {
+        if (fields.password !== fields.confirmPassword) {
+            context.setAlertBox({
+                open: true,
+                error: true,
+                msg: "Password and confirm password do not match"
+            });
+            return;
+        }
+
+        setIsLoading(true);
         const user = JSON.parse(localStorage.getItem("user"));
-
         const data = {
-          name: user?.name,
-          email: user?.email,
-          password: fields.oldPassword,
-          newPass: fields.password,
-          phone: formFields.phone,
-          images: formFields.images,
+            name: formFields.name,
+            email: formFields.email,
+            password: fields.oldPassword,
+            newPass: fields.password,
+            phone: formFields.phone,
+            images: previews,
         };
 
-        editData(`/api/user/changePassword/${user.userId}`, data).then(
-          (res) => {
-            context.setAlertBox({
-                  open: true,
-                  error: true,
-                  msg: "current password wrong",
+        editData(`/api/user/changePassword/${user?.userId}`, data)
+            .then((res) => {
+                setIsLoading(false);
+                if (res?.error) {
+                    context.setAlertBox({
+                        open: true,
+                        error: true,
+                        msg: res.msg || "Failed to update password"
+                    });
+                } else {
+                    context.setAlertBox({
+                        open: true,
+                        error: false,
+                        msg: "Password updated successfully"
+                    });
+                    // Clear password fields
+                    setFields({
+                        oldPassword: "",
+                        password: "",
+                        confirmPassword: ""
+                    });
+                    // Reset tab to first tab
+                    setValue(0);
+                }
+            })
+            .catch((err) => {
+                setIsLoading(false);
+                context.setAlertBox({
+                    open: true,
+                    error: true,
+                    msg: "Something went wrong while updating password"
                 });
-          }
-        );
-      }
+            });
     } else {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: "Please fill all the details",
-      });
-      return false;
+        context.setAlertBox({
+            open: true,
+            error: true,
+            msg: "Please fill all the password fields"
+        });
     }
   };
 

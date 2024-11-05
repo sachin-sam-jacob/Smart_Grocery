@@ -8,6 +8,9 @@ import Slide from '@mui/material/Slide';
 import { MyContext } from '../../App';
 import { districtsInKerala } from '../../data/districts'; // Import the districts data
 import { isDeliverable } from '../../data/pincode';
+import axios from 'axios'; // Add this import
+import { fetchDataFromApi } from '../../utils/api'; // Add this import
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -19,6 +22,7 @@ const CountryDropdown = () => {
     const [districtList, setDistrictList] = useState(districtsInKerala); // Initialize with districts in Kerala
     const [pincode, setPincode] = useState('');
     const [pincodeError, setPincodeError] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Add loading state if needed
 
     const context = useContext(MyContext);
 
@@ -51,12 +55,57 @@ const CountryDropdown = () => {
         setPincodeError('');
     };
 
-    const checkPincode = () => {
-        if (isDeliverable(context.selectedCountry, pincode)) {
-            context.setDeliverablePincode(pincode);
-            setIsOpenModal(false);
-        } else {
-            setPincodeError('Enter a deliverable pincode');
+    const checkPincode = async () => {
+        if (!pincode) {
+            setPincodeError('Please enter a pincode');
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            setPincodeError('');
+            
+            // Using postData from utils/api
+            const response = await fetchDataFromApi(`/api/pincodes/check/${pincode}`);
+            
+            if (!response.error) {
+                if (response.found) {
+                    // Update the context and local storage
+                    context.setselectedCountry(response.district);
+                    context.setDeliverablePincode(pincode);
+                    localStorage.setItem("location", response.district);
+                    
+                    // Show success message
+                    context.setAlertBox({
+                        open: true,
+                        error: false,
+                        msg: "Location updated successfully!"
+                    });
+
+                    // Close modal and redirect
+                    setIsOpenModal(false);
+                    window.location.href = "/";
+                } else {
+                    setPincodeError(response.msg || 'This pincode is not serviceable');
+                }
+            } else {
+                setPincodeError(response.msg || 'Error checking pincode');
+                context.setAlertBox({
+                    open: true,
+                    error: true,
+                    msg: response.msg || 'Error checking pincode'
+                });
+            }
+        } catch (error) {
+            console.error('Error checking pincode:', error);
+            setPincodeError('Something went wrong. Please try again.');
+            context.setAlertBox({
+                open: true,
+                error: true,
+                msg: 'Something went wrong. Please try again.'
+            });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -174,7 +223,13 @@ const CountryDropdown = () => {
                                     marginRight: '5px',
                                 }}
                             />
-                            <Button onClick={checkPincode} style={{ padding: '10px', width: '95px' }}>Check</Button>
+                            <Button 
+                                onClick={checkPincode} 
+                                style={{ padding: '10px', width: '95px' }}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? <CircularProgress size={20} /> : 'Check'}
+                            </Button>
                             {pincodeError && <span style={{ color: 'red', display: 'block', marginTop: '5px' }}>{pincodeError}</span>}
                         </div>
                     )}
