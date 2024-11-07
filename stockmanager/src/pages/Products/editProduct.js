@@ -756,7 +756,7 @@ const EditUpload = () => {
                                     </div>
 
 
-                                    <div className='col-md-4'>
+                                    {/* <div className='col-md-4'>
                                         <div className='form-group'>
                                             <h6>PRODUCT RAMS</h6>
                                             <Select
@@ -779,7 +779,7 @@ const EditUpload = () => {
 
                                             </Select>
                                         </div>
-                                    </div>
+                                    </div> */}
 
                                 </div>
 
@@ -810,7 +810,7 @@ const EditUpload = () => {
                                         </div>
                                     </div>
 
-                                    <div className='col-md-4'>
+                                    {/* <div className='col-md-4'>
                                         <div className='form-group'>
                                             <h6>PRODUCT SIZE</h6>
                                             <Select
@@ -831,7 +831,7 @@ const EditUpload = () => {
                                                 }
                                             </Select>
                                         </div>
-                                    </div>
+                                    </div> */}
 
                                     <div className='col-md-4'>
                                         <div className='form-group'>

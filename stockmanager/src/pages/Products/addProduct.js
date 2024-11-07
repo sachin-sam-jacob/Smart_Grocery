@@ -682,6 +682,31 @@ const ProductUpload = () => {
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <div className='col'>
+                                        <div className='form-group'>
+                                            <h6 className='text-uppercase'>is Featured </h6>
+                                            <Select
+                                                value={isFeaturedValue}
+                                                onChange={handleChangeisFeaturedValue}
+                                                displayEmpty
+                                                inputProps={{ 'aria-label': 'Without label' }}
+                                                className='w-100'
+                                            >
+                                                <MenuItem value="">
+                                                    <em value={null}>None</em>
+                                                </MenuItem>
+                                                <MenuItem value={true}>True</MenuItem>
+                                                <MenuItem value={false}>False</MenuItem>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                <div className='col'>
+                                        <div className='form-group'>
+                                            <h6>PRODUCT STOCK </h6>
+                                            <input type='text' name="countInStock" value={formFields.countInStock} onChange={inputChange} />
+                                        </div>
+                                    </div>
 
 
 
