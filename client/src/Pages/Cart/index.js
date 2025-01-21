@@ -10,6 +10,7 @@ import { deleteData, editData, fetchDataFromApi } from "../../utils/api";
 import { IoBagCheckOutline } from "react-icons/io5";
 import { FaHome } from "react-icons/fa";
 import swal from 'sweetalert2';
+import RecipeRecommendation from '../../Components/RecipeRecommendation/index';
 
 
 const Cart = () => {
@@ -131,6 +132,10 @@ const Cart = () => {
                             </div>
 
                             <div className="col-md-3">
+                                <div className="mb-3">
+                                    <RecipeRecommendation cartItems={cartData} />
+                                </div>
+                                
                                 <div className="card border p-3 cartDetails">
                                     <h4>CART TOTALS</h4>
                                     <div className="d-flex align-items-center mb-3">

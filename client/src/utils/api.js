@@ -101,3 +101,4 @@ export const updateStockAdmin = async (productId) => {
         throw error; // Rethrow the error for handling in the calling function
     }
 };
+

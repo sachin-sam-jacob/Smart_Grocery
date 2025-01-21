@@ -26,6 +26,9 @@ import { fetchDataFromApi } from './utils/api';
 import axios from 'axios';
 import AddPincode from './pages/Pincode/AddPincode';
 import ListPincode from './pages/Pincode/ListPincode';
+import AddSupplier from './pages/Suppliers/AddSupplier';
+import ManageSuppliers from './pages/Suppliers/ManageSuppliers';
+
 
 const MyContext = createContext();
 
@@ -206,7 +209,8 @@ function App() {
               <Route path="/orders/" exact={true} element={<Orders />} />
               <Route path="/addpincode" exact={true} element={<AddPincode />}/>
               <Route path="/listpincode" exact={true} element={<ListPincode />}/>
-
+              <Route path="/add-supplier" exact={true} element={<AddSupplier />} />
+              <Route path="/suppliers" element={<ManageSuppliers />} />
             </Routes>
           </div>
         </div>

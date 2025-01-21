@@ -14,6 +14,7 @@ import { FaClipboardCheck } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager icon
 import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincode icon
+import { FaUsers } from "react-icons/fa";
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -85,6 +86,17 @@ const Sidebar = () => {
         letterSpacing: '0.5px',
         textTransform: 'uppercase',
     };
+
+    const sidebarItems = [
+        {
+            title: "Supplier Management",
+            icon: <FaUsers />,
+            submenu: [
+                { title: "Add Supplier", path: "/add-supplier" },
+                { title: "Manage Suppliers", path: "/suppliers" }
+            ]
+        }
+    ];
 
     return (
         <>
@@ -158,6 +170,20 @@ const Sidebar = () => {
                             <ul className='submenu'>
                                 <li><Link to="/listpincode">List Pincode</Link></li>
                                 <li><Link to="/addpincode">Add Pincode</Link></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li>
+                        <Button className={`w-100 ${activeTab === 5 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(5)}>
+                            <span className='icon'><FaUsers /></span>
+                            Supplier Management
+                            <span className='arrow'><FaAngleRight /></span>
+                        </Button>
+                        <div className={`submenuWrapper ${activeTab === 5 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
+                            <ul className='submenu'>
+                                <li><Link to="/add-supplier">Add Supplier</Link></li>
+                                <li><Link to="/suppliers">Manage Suppliers</Link></li>
                             </ul>
                         </div>
                     </li>

@@ -54,7 +54,11 @@ const userSchema = mongoose.Schema({
     role: {
         type: String,
         default: 'customer'
-      }
+      },
+    isSupplier:{
+        type:Boolean,
+        default:false,
+    }
 });
 
 userSchema.virtual('id').get(function () {
