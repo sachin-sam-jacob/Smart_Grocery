@@ -38,6 +38,7 @@ const StockManager=require('./routes/stockManager.js');
 const Pincode=require('./routes/pincode.js');
 const Productsstock=require('./routes/productstock.js');
 const OrderStock=require('./routes/orderstock.js');
+const recipeRoutes=require('./routes/recipes.js');
 
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
@@ -59,10 +60,13 @@ app.use('/api/forgotpassword', forgotpass);
 app.use(`/api/listusers`,listusers);
 app.use(`/api/blocked`, blockedUsers);
 app.use(`/api/orders1`, orders1);
-app.use(`/api/stockManagers`,StockManager);
+app.use(`/api/stockmanager`,StockManager);
 app.use(`/api/pincodes`,Pincode);
 app.use(`/api/product`,Productsstock);
 app.use(`/api/order`,OrderStock);
+app.use('/api/recipes',recipeRoutes);
+
+
 //Database
 mongoose.connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
