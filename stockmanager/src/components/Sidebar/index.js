@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager icon
 import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincode icon
 import { FaUsers } from "react-icons/fa";
+import { IoBarChart } from "react-icons/io5";
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -95,6 +96,14 @@ const Sidebar = () => {
                 { title: "Add Supplier", path: "/add-supplier" },
                 { title: "Manage Suppliers", path: "/suppliers" }
             ]
+        },
+        {
+            title: "Stock Management",
+            icon: <IoBarChart />,
+            submenu: [
+                { title: "Stock Overview", path: "/stock-management" },
+                { title: "Stock Alerts", path: "/stock-alerts" }
+            ]
         }
     ];
 
@@ -170,6 +179,20 @@ const Sidebar = () => {
                             <ul className='submenu'>
                                 <li><Link to="/listpincode">List Pincode</Link></li>
                                 <li><Link to="/addpincode">Add Pincode</Link></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li>
+                        <Button className={`w-100 ${activeTab === 6 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(6)}>
+                            <span className='icon'><IoBarChart /></span>
+                            Stock Management
+                            <span className='arrow'><FaAngleRight /></span>
+                        </Button>
+                        <div className={`submenuWrapper ${activeTab === 6 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
+                            <ul className='submenu'>
+                                <li><Link to="/stock-management">Stock Overview</Link></li>
+                                <li><Link to="/stock-alerts">Stock Alerts</Link></li>
                             </ul>
                         </div>
                     </li>

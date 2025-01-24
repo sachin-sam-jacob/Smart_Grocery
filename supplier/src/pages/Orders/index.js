@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { editData, fetchDataFromApi } from '../../utils/api';
 import { emphasize, styled } from '@mui/material/styles';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
@@ -9,6 +9,7 @@ import Pagination from '@mui/material/Pagination';
 import Dialog from '@mui/material/Dialog';
 import { MdClose } from "react-icons/md";
 import Button from '@mui/material/Button';
+import { MyContext } from '../../contexts/MyContext';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -33,7 +34,66 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
     };
 });
 
+const SupplierOrders = () => {
+    const [orders, setOrders] = useState([]);
+    const { user } = useContext(MyContext);
 
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            const response = await fetchDataFromApi(`/api/stock/supplier-orders/${user.id}`);
+            setOrders(response.data);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        }
+    };
+
+    const handleOrderStatus = async (orderId, status) => {
+        try {
+            await fetchDataFromApi(`/api/stock/update-order/${orderId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status })
+            });
+            
+            alert('Order status updated successfully');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error updating order:', error);
+            alert('Failed to update order status');
+        }
+    };
+
+    return (
+        <div className="supplier-orders">
+            <h2>Stock Orders</h2>
+            <div className="orders-list">
+                {orders.map(order => (
+                    <div key={order._id} className="order-card">
+                        <h3>Order #{order._id}</h3>
+                        <p>Product: {order.product.name}</p>
+                        <p>Quantity: {order.quantity}</p>
+                        <p>Status: {order.status}</p>
+                        <p>Auto-Ordered: {order.autoOrdered ? 'Yes' : 'No'}</p>
+                        
+                        {order.status === 'pending' && (
+                            <div className="action-buttons">
+                                <button onClick={() => handleOrderStatus(order._id, 'approved')}>
+                                    Approve
+                                </button>
+                                <button onClick={() => handleOrderStatus(order._id, 'rejected')}>
+                                    Reject
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const Orders = () => {
 

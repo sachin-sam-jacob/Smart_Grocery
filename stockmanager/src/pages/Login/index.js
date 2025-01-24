@@ -108,7 +108,7 @@ const Login = () => {
                             email: res.user?.email,
                             userId: res.user?.id,
                             isStockManager: res.user?.isStockManager,
-                            location:res.user?.location
+                            location: res.user?.location
                         }
 
 
@@ -179,6 +179,7 @@ const Login = () => {
                       name: res.user?.name,
                       email: res.user?.email,
                       userId: res.user?.id,
+                      location: res.user?.location
                     };
           
                     localStorage.setItem("user", JSON.stringify(user));

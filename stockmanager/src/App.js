@@ -28,6 +28,8 @@ import AddPincode from './pages/Pincode/AddPincode';
 import ListPincode from './pages/Pincode/ListPincode';
 import AddSupplier from './pages/Suppliers/AddSupplier';
 import ManageSuppliers from './pages/Suppliers/ManageSuppliers';
+import StockManagement from './pages/StockManagement/index';
+import StockAlerts from './pages/StockManagement/StockAlerts';
 
 
 const MyContext = createContext();
@@ -211,6 +213,8 @@ function App() {
               <Route path="/listpincode" exact={true} element={<ListPincode />}/>
               <Route path="/add-supplier" exact={true} element={<AddSupplier />} />
               <Route path="/suppliers" element={<ManageSuppliers />} />
+              <Route path="/stock-management" exact={true} element={<StockManagement />} />
+              <Route path="/stock-alerts" exact={true} element={<StockAlerts />} />
             </Routes>
           </div>
         </div>
