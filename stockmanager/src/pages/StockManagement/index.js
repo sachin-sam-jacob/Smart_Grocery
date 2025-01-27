@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { MyContext } from '../../App';
-import { fetchDataFromApi } from '../../utils/api';
+import { fetchDataFromApi, postData } from '../../utils/api';
 import { 
   Table, 
   TableBody, 
@@ -11,14 +11,29 @@ import {
   Paper,
   Button,
   CircularProgress,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  DialogContentText
 } from '@mui/material';
 import { IoWarning, IoCheckmark } from "react-icons/io5";
 
 const StockManagement = () => {
   const { setProgress, setAlertBox, user } = useContext(MyContext);
   const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState('');
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const fetchStockData = async () => {
     setProgress(20);
@@ -63,9 +78,40 @@ const StockManagement = () => {
     }
   };
 
+  const fetchSuppliers = async () => {
+    try {
+      if (!user?.location) {
+        throw new Error('User location not found');
+      }
+
+      const response = await fetchDataFromApi(`/api/stock/suppliers-by-location/${user.location}`);
+      
+      if (Array.isArray(response)) {
+        setSuppliers(response);
+      } else {
+        console.error('Invalid suppliers data format:', response);
+        setSuppliers([]);
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Failed to load suppliers data"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      setSuppliers([]);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: "Failed to fetch suppliers"
+      });
+    }
+  };
+
   useEffect(() => {
     if (user && user.location) {
       fetchStockData();
+      fetchSuppliers();
     } else {
       setAlertBox({
         open: true,
@@ -96,24 +142,81 @@ const StockManagement = () => {
     }
   };
 
-  const handleManualOrder = async (productId) => {
+  const handleManualOrder = (product) => {
+    setSelectedProduct(product);
+    setOrderDialogOpen(true);
+  };
+
+  const handleOrderSubmit = async () => {
     try {
-      await fetchDataFromApi(`/api/stock/manual-order/${productId}`, {
-        method: 'POST'
+      if (!selectedProduct || !selectedSupplier || !orderQuantity) {
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Please fill all required fields"
+        });
+        return;
+      }
+
+      // Log the raw selected values
+      console.log('Selected Product:', selectedProduct);
+      console.log('Selected Supplier:', selectedSupplier);
+      console.log('User:', user);
+
+      // Only include the fields that match the StockOrder model
+      const orderData = {
+        productId: selectedProduct._id || selectedProduct.id,
+        supplierId: selectedSupplier._id,
+        quantity: parseInt(orderQuantity),
+        location: user.location,
+        status: 'pending'
+      };
+
+      // Log the final order data being sent
+      console.log('Submitting order with data:', JSON.stringify(orderData, null, 2));
+
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/stock/create-order`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
       });
+
+      const data = await response.json();
+      console.log('Server response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to create order');
+      }
+
+      setSelectedSupplier(null);
+      setOrderQuantity('');
+      setOrderDialogOpen(false);
+      
       setAlertBox({
         open: true,
         error: false,
-        msg: "Manual order request sent successfully"
+        msg: "Order submitted successfully"
       });
-      fetchStockData();
+
+      await fetchStockData();
+
     } catch (error) {
+      console.error('Error submitting order:', error);
       setAlertBox({
         open: true,
         error: true,
-        msg: "Failed to send manual order request"
+        msg: error.message || "Failed to submit order"
       });
     }
+  };
+
+  const handleSupplierSelect = (event) => {
+    const supplier = event.target.value;
+    console.log('Selected supplier:', supplier);
+    setSelectedSupplier(supplier);
   };
 
   const getStockStatus = (stock, threshold) => {
@@ -209,7 +312,7 @@ const StockManagement = () => {
                         variant="outlined"
                         color="primary"
                         size="small"
-                        onClick={() => handleManualOrder(product.id)}
+                        onClick={() => handleManualOrder(product)}
                         disabled={product.currentStock > product.threshold * 0.5}
                       >
                         Order Stock
@@ -222,6 +325,46 @@ const StockManagement = () => {
           </Table>
         </TableContainer>
       )}
+      <Dialog open={orderDialogOpen} onClose={() => setOrderDialogOpen(false)}>
+        <DialogTitle>Create Manual Order</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please select a supplier and enter the order quantity.
+          </DialogContentText>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Supplier</InputLabel>
+            <Select
+              value={selectedSupplier || ''}
+              onChange={handleSupplierSelect}
+              label="Supplier"
+            >
+              {Array.isArray(suppliers) && suppliers.map((supplier) => (
+                <MenuItem 
+                  key={supplier._id} 
+                  value={supplier}
+                >
+                  {supplier.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            margin="dense"
+            label="Quantity"
+            type="number"
+            fullWidth
+            value={orderQuantity}
+            onChange={(e) => setOrderQuantity(e.target.value)}
+            InputProps={{ inputProps: { min: 1 } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOrderDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleOrderSubmit} variant="contained">
+            Submit Order
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

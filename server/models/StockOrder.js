@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const stockOrderSchema = new mongoose.Schema({
+// Check if the model already exists before defining it
+const StockOrder = mongoose.models.StockOrder || mongoose.model('StockOrder', new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
@@ -25,16 +26,12 @@ const stockOrderSchema = new mongoose.Schema({
         enum: ['pending', 'approved', 'rejected', 'completed'],
         default: 'pending'
     },
-    requestedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
     orderDate: {
         type: Date,
         default: Date.now
     }
-});
+}, {
+    timestamps: true
+}));
 
-const StockOrder = mongoose.model('StockOrder', stockOrderSchema);
 module.exports = { StockOrder };
