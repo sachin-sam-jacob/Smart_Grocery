@@ -18,7 +18,7 @@ const checkDistrictManager = async (req, res, next) => {
 };
 
 // Get stock status for all products in a location
-router.get('/status', checkDistrictManager, async (req, res) => {
+router.get('/status', async (req, res) => {
     try {
         const location = req.query.location;
         console.log('Fetching products for location:', location);
@@ -27,25 +27,41 @@ router.get('/status', checkDistrictManager, async (req, res) => {
             return res.status(400).json({ error: 'Location parameter is required' });
         }
 
-        // Find products specifically for this location
-        const products = await Product.find({ location: location });
+        // Find products for this location or products marked as "All"
+        const products = await Product.find({
+            $or: [
+                { location: location },
+                { location: "All" }
+            ]
+        });
+
         console.log(`Found ${products.length} products for location ${location}`);
 
         if (!products || products.length === 0) {
             return res.json([]);
         }
 
+        // Get all stock alerts for these products
+        const stockAlerts = await StockAlert.find({
+            productId: { $in: products.map(p => p._id) },
+            status: 'active'
+        });
+
+        // Get all stock orders for these products
+        const stockOrders = await StockOrder.find({
+            productId: { $in: products.map(p => p._id) },
+            status: { $in: ['pending', 'approved'] }
+        });
+
+        // Transform products into stock data
         const stockData = await Promise.all(products.map(async (product) => {
-            const alerts = await StockAlert.find({ 
-                productId: product._id,
-                status: 'active'
-            });
+            const productAlerts = stockAlerts.filter(alert => 
+                alert.productId.toString() === product._id.toString()
+            );
             
-            const autoOrder = await StockOrder.findOne({
-                productId: product._id,
-                autoOrdered: true,
-                status: 'pending'
-            });
+            const productOrders = stockOrders.filter(order => 
+                order.productId.toString() === product._id.toString()
+            );
 
             const demandLevel = await calculateDemandLevel(product._id);
 
@@ -55,22 +71,24 @@ router.get('/status', checkDistrictManager, async (req, res) => {
                 currentStock: product.countInStock,
                 threshold: Math.ceil(product.countInStock * 0.3), // 30% of max stock
                 demandLevel,
-                autoOrderEnabled: !!autoOrder,
                 location: product.location,
-                alerts: alerts.map(alert => ({
-                    type: alert.type,
-                    message: alert.type === 'low_stock' 
-                        ? 'Stock running low'
-                        : 'High demand detected'
-                }))
+                description: product.description,
+                price: product.price,
+                category: product.catName,
+                alerts: productAlerts,
+                pendingOrders: productOrders.length,
+                autoOrderEnabled: productAlerts.some(alert => alert.autoOrderEnabled)
             };
         }));
 
-        console.log(`Returning ${stockData.length} products for location ${location}`);
         res.json(stockData);
+
     } catch (error) {
         console.error('Error in stock status route:', error);
-        res.status(500).json({ error: 'Failed to fetch stock status', details: error.message });
+        res.status(500).json({ 
+            error: 'Failed to fetch stock status',
+            details: error.message 
+        });
     }
 });
 
@@ -106,7 +124,7 @@ router.get('/alerts', async (req, res) => {
 });
 
 // Get suppliers by location
-router.get('/suppliers/location/:location', async (req, res) => {
+router.get('/suppliers-by-location/:location', async (req, res) => {
     try {
         const { location } = req.params;
         const suppliers = await User.find({ 
@@ -119,34 +137,61 @@ router.get('/suppliers/location/:location', async (req, res) => {
     }
 });
 
-// Create manual order
-router.post('/order/:productId', async (req, res) => {
+// Create stock order
+router.post('/create-order', async (req, res) => {
     try {
-        const { productId } = req.params;
-        const { supplierId, location } = req.body;
+        console.log('Received order request:', req.body);
+        const { productId, supplierId, quantity, location, requestedBy } = req.body;
 
+        // Validate required fields
+        if (!productId || !supplierId || !quantity || !location) {
+            return res.status(400).json({ 
+                error: 'Missing required fields',
+                details: 'productId, supplierId, quantity, and location are required'
+            });
+        }
+
+        // Validate product exists
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        // Validate supplier exists
         const supplier = await User.findById(supplierId);
         if (!supplier || !supplier.isSupplier) {
             return res.status(404).json({ error: 'Supplier not found' });
         }
 
-        const order = new StockOrder({
+        // Create new stock order
+        const stockOrder = new StockOrder({
             productId,
             supplierId,
-            quantity: Math.ceil(product.maxStock * 0.5), // Order 50% of max stock
+            quantity,
             location,
-            autoOrdered: false
+            requestedBy: requestedBy || 'system', // Use provided requestedBy or default to 'system'
+            status: 'pending'
         });
 
-        await order.save();
-        res.json({ message: 'Order created successfully' });
+        await stockOrder.save();
+        console.log('Stock order created:', stockOrder);
+
+        // Populate the order details for response
+        const populatedOrder = await StockOrder.findById(stockOrder._id)
+            .populate('productId', 'name')
+            .populate('supplierId', 'name');
+
+        res.status(201).json({
+            message: 'Stock order created successfully',
+            order: populatedOrder
+        });
+
     } catch (error) {
-        res.status(500).json({ error: 'Failed to create order' });
+        console.error('Error creating stock order:', error);
+        res.status(500).json({ 
+            error: 'Failed to create stock order',
+            details: error.message 
+        });
     }
 });
 

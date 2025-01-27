@@ -51,6 +51,7 @@ const productSchema = mongoose.Schema({
     countInStock: {
         type: Number,
         required: true,
+        min: 0
     },
     rating: {
         type: Number,
@@ -82,9 +83,10 @@ const productSchema = mongoose.Schema({
             default: null,
         }
     ],
-    location:{
-        type:String,
-        default:"All"
+    location: {
+        type: String,
+        required: true,
+        default: 'All'  // 'All' means available in all locations
     },
     dateCreated: {
         type: Date,

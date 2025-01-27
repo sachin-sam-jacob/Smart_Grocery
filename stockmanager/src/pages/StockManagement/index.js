@@ -20,6 +20,49 @@ const StockManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchStockData = async () => {
+    setProgress(20);
+    try {
+      if (!user?.location) {
+        throw new Error('User location not found');
+      }
+
+      console.log('Fetching data for location:', user.location);
+      const data = await fetchDataFromApi(`/api/stock/status?location=${encodeURIComponent(user.location)}`);
+      console.log('Received products:', data);
+      
+      if (Array.isArray(data)) {
+        setProducts(data);
+        if (data.length === 0) {
+          setAlertBox({
+            open: true,
+            error: true,
+            msg: "No products found for your location"
+          });
+        }
+      } else {
+        console.error('Received non-array data:', data);
+        setProducts([]);
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Invalid data format received from server"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      setProducts([]);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: error.message || "Failed to fetch stock data"
+      });
+    } finally {
+      setLoading(false);
+      setProgress(100);
+    }
+  };
+
   useEffect(() => {
     if (user && user.location) {
       fetchStockData();
@@ -32,25 +75,6 @@ const StockManagement = () => {
       setLoading(false);
     }
   }, [user]);
-
-  const fetchStockData = async () => {
-    setProgress(20);
-    try {
-      console.log('Fetching data for location:', user.location);
-      const data = await fetchDataFromApi(`/api/stock/status?location=${user.location}`);
-      console.log('Received products:', data);
-      setProducts(data);
-      setProgress(100);
-    } catch (error) {
-      console.error('Error fetching stock data:', error);
-      setAlertBox({
-        open: true,
-        error: true,
-        msg: "Failed to fetch stock data"
-      });
-    }
-    setLoading(false);
-  };
 
   const handleAutoOrder = async (productId) => {
     try {
