@@ -16,6 +16,7 @@ import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager ic
 import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincode icon
 import { MdShoppingBag } from "react-icons/md";
 import { IoMdCart } from "react-icons/io";
+import { IoCartOutline } from "react-icons/io5"; // Add this import for the stock orders icon
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -95,11 +96,12 @@ const Sidebar = () => {
 
     return (
         <div className="sidebar">
-            <ul>
             <div style={locationStyle}>
-                    <FaMapMarkerAlt style={iconStyle} />
-                    <span style={textStyle}>{location}</span>
-                </div>
+                <FaMapMarkerAlt style={iconStyle} />
+                <span style={textStyle}>{location}</span>
+            </div>
+
+            <ul>
                 <li>
                     <Button className={`w-100 ${activeTab === 1 ? 'active' : ''}`} onClick={() => handleNavigation('/dashboard', 1)}>
                         <span className='icon'><MdDashboard /></span>
@@ -118,22 +120,24 @@ const Sidebar = () => {
                         <ul className='submenu'>
                             <li><Link to="/products">My Products</Link></li>
                             <li><Link to="/product/upload">Add New Product</Link></li>
-                            <li><Link to="/inventory">Stock Management</Link></li>
                         </ul>
                     </div>
                 </li>
-
-                {/* Order Management */}
+                {/* Add Stock Orders menu item */}
                 <li>
-                    <Button className={`w-100 ${activeTab === 3 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(3)}>
-                        <span className='icon'><IoMdCart /></span>
-                        Order Management
+                    <Button className={`w-100 ${activeTab === 4 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(4)}>
+                        <span className='icon'><IoCartOutline /></span>
+                        Stock Orders
                         <span className='arrow'><FaAngleRight /></span>
                     </Button>
-                    <div className={`submenuWrapper ${activeTab === 3 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
+                    <div className={`submenuWrapper ${activeTab === 4 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
                         <ul className='submenu'>
-                            <li><Link to="/orders">Bulk Orders</Link></li>
-                            <li><Link to="/order-history">Order History</Link></li>
+                            <li>
+                                <Link to="/stock-orders">View Orders</Link>
+                            </li>
+                            <li>
+                                <Link to="/stock-orders/history">Order History</Link>
+                            </li>
                         </ul>
                     </div>
                 </li>
@@ -145,6 +149,12 @@ const Sidebar = () => {
                         District Manager Chat
                     </Button>
                 </li>
+
+                <div className='logoutWrapper'>
+                    <div className='logoutBox'>
+                        <Button variant="contained" onClick={logout}><IoMdLogOut /> Logout</Button>
+                    </div>
+                </div>
             </ul>
         </div>
     );

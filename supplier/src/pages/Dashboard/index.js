@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdShoppingBag, MdTrendingUp } from "react-icons/md";
 import { IoMdCart } from "react-icons/io";
 import { IoIosTimer } from "react-icons/io";
+import { Box, Grid, Typography, Paper } from '@mui/material';
 import DashboardBox from "./components/dashboardBox";
 import { fetchDataFromApi } from "../../utils/api";
 import { Chart } from "react-google-charts";
@@ -14,82 +15,36 @@ const Dashboard = () => {
         monthlyRevenue: 0
     });
 
-    const styles = {
-        mainContainer: {
-            padding: '30px',
-            backgroundColor: '#f4f6f8',
-        },
-        headerSection: {
-            marginBottom: '30px'
-        },
-        title: {
-            fontSize: '28px',
-            fontWeight: 'bold',
-            color: '#2c3e50',
-            marginBottom: '10px'
-        },
-        subtitle: {
-            fontSize: '16px',
-            color: '#7f8c8d',
-            marginBottom: '25px'
-        },
-        metricsContainer: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '25px',
-            marginBottom: '40px'
-        },
-        chartsSection: {
-            display: 'flex',
-            gap: '25px',
-            marginTop: '30px'
-        },
-        chartCard: {
-            flex: '1',
-            backgroundColor: '#fff',
-            borderRadius: '15px',
-            padding: '25px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        },
-        chartTitle: {
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#2c3e50',
-            marginBottom: '20px'
-        }
-    };
-
     const dashboardBoxes = [
         {
             title: "Total Products",
             count: metrics.totalProducts,
-            icon: <MdShoppingBag />,
+            icon: <MdShoppingBag size={24} color="white" />,
             color: ["#1da256", "#48d483"],
             grow: true
         },
         {
             title: "Pending Orders",
             count: metrics.pendingOrders,
-            icon: <IoMdCart />,
+            icon: <IoMdCart size={24} color="white" />,
             color: ["#c012e2", "#eb64fe"]
         },
         {
             title: "Low Stock Items",
             count: metrics.lowStockItems,
-            icon: <IoIosTimer />,
+            icon: <IoIosTimer size={24} color="white" />,
             color: ["#2c78e5", "#60aff5"]
         },
         {
             title: "Monthly Revenue",
             count: `₹${metrics.monthlyRevenue}`,
-            icon: <MdTrendingUp />,
+            icon: <MdTrendingUp size={24} color="white" />,
             color: ["#f39c12", "#ffcd4d"],
             grow: true
         }
     ];
 
     useEffect(() => {
-        // Fetch dashboard data
         fetchDashboardData();
     }, []);
 
@@ -108,49 +63,77 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="right-content w-100" style={styles.mainContainer}>
-            <div style={styles.headerSection}>
-                <h1 style={styles.title}>Supplier Dashboard</h1>
-                <p style={styles.subtitle}>Welcome back! Here's your business overview</p>
-            </div>
+        <Box sx={{
+            padding: '30px',
+            backgroundColor: theme => theme.palette.mode === 'dark' ? '#071739' : '#f4f6f8',
+            minHeight: '100vh'
+        }}>
+            {/* Header Section */}
+            <Box sx={{ mb: 4, mt: 8 }}>
+                <Typography variant="h4" sx={{
+                    fontWeight: 700,
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.9)' : '#2c3e50',
+                    mb: 1
+                }}>
+                    Supplier Dashboard
+                </Typography>
+                <Typography variant="subtitle1" sx={{
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.7)' : '#7f8c8d'
+                }}>
+                    Welcome back! Here's your business overview
+                </Typography>
+            </Box>
 
-            <div style={styles.metricsContainer}>
+            {/* Metrics Grid */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
                 {dashboardBoxes.map((box, index) => (
-                    <DashboardBox
-                        key={index}
-                        title={box.title}
-                        count={box.count}
-                        icon={box.icon}
-                        color={box.color}
-                        grow={box.grow}
-                    />
+                    <Grid item xs={12} sm={6} md={3} key={index}>
+                        <DashboardBox {...box} />
+                    </Grid>
                 ))}
-            </div>
+            </Grid>
 
-            <div style={styles.chartsSection}>
-                <div style={styles.chartCard}>
-                    <h3 style={styles.chartTitle}>Sales Overview</h3>
-                    <Chart
-                        width={'100%'}
-                        height={'300px'}
-                        chartType="LineChart"
-                        loader={<div>Loading Chart...</div>}
-                        data={[
-                            ['Month', 'Sales'],
-                            ['Jan', 1000],
-                            ['Feb', 1170],
-                            ['Mar', 660],
-                            ['Apr', 1030]
-                        ]}
-                        options={{
-                            curveType: 'function',
-                            legend: { position: 'bottom' },
-                            backgroundColor: 'transparent'
-                        }}
-                    />
-                </div>
-            </div>
-        </div>
+            {/* Charts Section */}
+            <Paper sx={{
+                p: 3,
+                backgroundColor: theme => theme.palette.mode === 'dark' ? '#112143' : '#fff',
+                borderRadius: '16px'
+            }}>
+                <Typography variant="h6" sx={{
+                    fontWeight: 600,
+                    mb: 3,
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.9)' : '#2c3e50'
+                }}>
+                    Sales Overview
+                </Typography>
+                <Chart
+                    width={'100%'}
+                    height={'400px'}
+                    chartType="LineChart"
+                    loader={<div>Loading Chart...</div>}
+                    data={[
+                        ['Month', 'Sales'],
+                        ['Jan', 1000],
+                        ['Feb', 1170],
+                        ['Mar', 660],
+                        ['Apr', 1030]
+                    ]}
+                    options={{
+                        curveType: 'function',
+                        legend: { position: 'bottom' },
+                        backgroundColor: 'transparent',
+                        chartArea: { width: '80%', height: '70%' },
+                        colors: ['#0858f7'],
+                        vAxis: {
+                            textStyle: { color: '#7f8c8d' }
+                        },
+                        hAxis: {
+                            textStyle: { color: '#7f8c8d' }
+                        }
+                    }}
+                />
+            </Paper>
+        </Box>
     );
 };
 

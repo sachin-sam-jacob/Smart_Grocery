@@ -28,6 +28,8 @@ import axios from 'axios';
 import AddPincode from './pages/Pincode/AddPincode';
 import ListPincode from './pages/Pincode/ListPincode';
 import { MyContextProvider } from './contexts/MyContext';
+import StockOrders from './components/StockOrders';
+import OrderHistory from './components/StockOrders/OrderHistory';
 
 const MyContext = createContext();
 
@@ -216,6 +218,8 @@ function App() {
                 <Route path="/orders/" exact={true} element={<Orders />} />
                 <Route path="/addpincode" exact={true} element={<AddPincode />}/>
                 <Route path="/listpincode" exact={true} element={<ListPincode />}/>
+                <Route path="/stock-orders" element={<StockOrders />} />
+                <Route path="/stock-orders/history" element={<OrderHistory />} />
 
                 <Route path="*" element={<Navigate to={isLogin ? "/" : "/login"} />} />
               </Routes>

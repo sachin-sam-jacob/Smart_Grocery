@@ -246,20 +246,24 @@ router.post('/auto-order/:productId', async (req, res) => {
     }
 });
 
-// Get orders for a supplier
+// Get orders for a specific supplier
 router.get('/supplier-orders/:supplierId', async (req, res) => {
     try {
+        const { supplierId } = req.params;
+        
         const orders = await StockOrder.find({ 
-            supplierId: req.params.supplierId 
+            supplierId: supplierId 
         })
-        .populate('productId', 'name')
-        .populate('requestedBy', 'name')
-        .sort({ orderDate: -1 });
+        .populate('productId', 'name currentStock threshold')
+        .sort({ orderDate: -1 }); // Most recent orders first
 
-        res.json(orders);
+        res.status(200).json(orders);
     } catch (error) {
-        console.error('Error fetching supplier stock orders:', error);
-        res.status(500).json({ error: 'Failed to fetch stock orders' });
+        console.error('Error fetching supplier orders:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch supplier orders',
+            details: error.message 
+        });
     }
 });
 
@@ -280,27 +284,33 @@ router.get('/manager-orders/:location', async (req, res) => {
     }
 });
 
-// Update order status
-router.put('/update-order-status/:orderId', async (req, res) => {
+// Update order status by supplier
+router.patch('/update-order-status/:orderId', async (req, res) => {
     try {
+        const { orderId } = req.params;
         const { status } = req.body;
-        const order = await StockOrder.findByIdAndUpdate(
-            req.params.orderId,
-            { status },
-            { new: true }
-        )
-        .populate('productId', 'name')
-        .populate('supplierId', 'name')
-        .populate('requestedBy', 'name');
 
-        if (!order) {
-            return res.status(404).json({ error: 'Stock order not found' });
+        if (!['pending', 'approved', 'delivered'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
         }
 
-        res.json(order);
+        const order = await StockOrder.findByIdAndUpdate(
+            orderId,
+            { status },
+            { new: true }
+        ).populate('productId', 'name currentStock threshold');
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        res.status(200).json(order);
     } catch (error) {
-        console.error('Error updating stock order status:', error);
-        res.status(500).json({ error: 'Failed to update stock order status' });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ 
+            error: 'Failed to update order status',
+            details: error.message 
+        });
     }
 });
 
@@ -325,5 +335,27 @@ async function calculateDemandLevel(productId) {
         return 'Unknown';
     }
 }
+
+router.get('/supplier-delivered-orders/:supplierId', async (req, res) => {
+    try {
+        const { supplierId } = req.params;
+        
+        const deliveredOrders = await StockOrder.find({ 
+            supplierId: supplierId,
+            status: 'delivered'
+        })
+        .populate('productId', 'name price')
+        .sort({ updatedAt: -1 }) // Sort by delivery date (updatedAt)
+        .select('orderDate productId quantity location status updatedAt'); // Select only needed fields
+
+        res.status(200).json(deliveredOrders);
+    } catch (error) {
+        console.error('Error fetching delivered orders:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch delivered orders history',
+            details: error.message 
+        });
+    }
+});
 
 module.exports = router; 
