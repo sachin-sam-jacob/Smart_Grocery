@@ -34,16 +34,29 @@ const StockManagement = () => {
   const [orderQuantity, setOrderQuantity] = useState('');
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [autoOrderDialogOpen, setAutoOrderDialogOpen] = useState(false);
+  const [autoOrderQuantity, setAutoOrderQuantity] = useState('');
+  const [autoOrderThreshold, setAutoOrderThreshold] = useState('');
+  const [selectedAutoOrderProduct, setSelectedAutoOrderProduct] = useState(null);
+
+  const getUserData = () => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      return JSON.parse(userData);
+    }
+    return null;
+  };
 
   const fetchStockData = async () => {
     setProgress(20);
     try {
-      if (!user?.location) {
+      const currentUser = getUserData();
+      if (!currentUser?.location) {
         throw new Error('User location not found');
       }
 
-      console.log('Fetching data for location:', user.location);
-      const data = await fetchDataFromApi(`/api/stock/status?location=${encodeURIComponent(user.location)}`);
+      console.log('Fetching data for location:', currentUser.location);
+      const data = await fetchDataFromApi(`/api/stock/status?location=${encodeURIComponent(currentUser.location)}`);
       console.log('Received products:', data);
       
       if (Array.isArray(data)) {
@@ -80,11 +93,12 @@ const StockManagement = () => {
 
   const fetchSuppliers = async () => {
     try {
-      if (!user?.location) {
+      const currentUser = getUserData();
+      if (!currentUser?.location) {
         throw new Error('User location not found');
       }
 
-      const response = await fetchDataFromApi(`/api/stock/suppliers-by-location/${user.location}`);
+      const response = await fetchDataFromApi(`/api/stock/suppliers-by-location/${currentUser.location}`);
       
       if (Array.isArray(response)) {
         setSuppliers(response);
@@ -109,35 +123,87 @@ const StockManagement = () => {
   };
 
   useEffect(() => {
-    if (user && user.location) {
-      fetchStockData();
-      fetchSuppliers();
-    } else {
-      setAlertBox({
-        open: true,
-        error: true,
-        msg: "User location not found. Please contact administrator."
-      });
-      setLoading(false);
-    }
-  }, [user]);
+    const initializeData = async () => {
+      const currentUser = getUserData();
+      if (currentUser?.location) {
+        await fetchStockData();
+        await fetchSuppliers();
+      } else {
+        setTimeout(async () => {
+          const retryUser = getUserData();
+          if (retryUser?.location) {
+            await fetchStockData();
+            await fetchSuppliers();
+          } else {
+            setAlertBox({
+              open: true,
+              error: true,
+              msg: "User location not found. Please try logging in again."
+            });
+            setLoading(false);
+          }
+        }, 1000);
+      }
+    };
 
-  const handleAutoOrder = async (productId) => {
+    initializeData();
+  }, []);
+
+  const handleAutoOrder = async (product) => {
+    setSelectedAutoOrderProduct(product);
+    setAutoOrderDialogOpen(true);
+  };
+
+  const handleAutoOrderSubmit = async () => {
     try {
-      await fetchDataFromApi(`/api/stock/auto-order/${productId}`, {
-        method: 'POST'
-      });
+      if (!selectedAutoOrderProduct || !selectedSupplier || !autoOrderQuantity || !autoOrderThreshold) {
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Please fill all required fields"
+        });
+        return;
+      }
+
+      const configData = {
+        supplierId: selectedSupplier._id,
+        threshold: parseInt(autoOrderThreshold),
+        autoOrderQuantity: parseInt(autoOrderQuantity),
+        location: user.location
+      };
+
+      const response = await fetchDataFromApi(
+        `/api/stock/auto-order/configure/${selectedAutoOrderProduct._id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(configData)
+        }
+      );
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      setAutoOrderDialogOpen(false);
+      setSelectedSupplier(null);
+      setAutoOrderQuantity('');
+      setAutoOrderThreshold('');
+      setSelectedAutoOrderProduct(null);
+
       setAlertBox({
         open: true,
         error: false,
-        msg: "Auto-order request sent successfully"
+        msg: "Auto-order configured successfully"
       });
+
       fetchStockData();
+
     } catch (error) {
+      console.error('Error configuring auto-order:', error);
       setAlertBox({
         open: true,
         error: true,
-        msg: "Failed to send auto-order request"
+        msg: error.message || "Failed to configure auto-order"
       });
     }
   };
@@ -158,12 +224,10 @@ const StockManagement = () => {
         return;
       }
 
-      // Log the raw selected values
       console.log('Selected Product:', selectedProduct);
       console.log('Selected Supplier:', selectedSupplier);
       console.log('User:', user);
 
-      // Only include the fields that match the StockOrder model
       const orderData = {
         productId: selectedProduct._id || selectedProduct.id,
         supplierId: selectedSupplier._id,
@@ -172,7 +236,6 @@ const StockManagement = () => {
         status: 'pending'
       };
 
-      // Log the final order data being sent
       console.log('Submitting order with data:', JSON.stringify(orderData, null, 2));
 
       const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/stock/create-order`, {
@@ -303,7 +366,7 @@ const StockManagement = () => {
                         color="primary"
                         size="small"
                         className="btn-blue mr-2"
-                        onClick={() => handleAutoOrder(product.id)}
+                        onClick={() => handleAutoOrder(product)}
                         disabled={product.autoOrderEnabled}
                       >
                         Enable Auto-Order
@@ -362,6 +425,68 @@ const StockManagement = () => {
           <Button onClick={() => setOrderDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleOrderSubmit} variant="contained">
             Submit Order
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog 
+        open={autoOrderDialogOpen} 
+        onClose={() => setAutoOrderDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Configure Auto-Order</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Configure automatic ordering for {selectedAutoOrderProduct?.name}. 
+            Orders will be placed automatically when stock falls below the threshold.
+          </DialogContentText>
+          
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Select Supplier</InputLabel>
+            <Select
+              value={selectedSupplier || ''}
+              onChange={handleSupplierSelect}
+              label="Select Supplier"
+            >
+              {suppliers.map((supplier) => (
+                <MenuItem key={supplier._id} value={supplier}>
+                  {supplier.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            label="Stock Threshold"
+            type="number"
+            value={autoOrderThreshold}
+            onChange={(e) => setAutoOrderThreshold(e.target.value)}
+            helperText="Order will be placed when stock falls below this number"
+            sx={{ mb: 2 }}
+            InputProps={{ inputProps: { min: 1 } }}
+          />
+
+          <TextField
+            fullWidth
+            label="Auto-Order Quantity"
+            type="number"
+            value={autoOrderQuantity}
+            onChange={(e) => setAutoOrderQuantity(e.target.value)}
+            helperText="Amount to order automatically"
+            InputProps={{ inputProps: { min: 1 } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAutoOrderDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAutoOrderSubmit} 
+            variant="contained"
+            color="primary"
+          >
+            Enable Auto-Order
           </Button>
         </DialogActions>
       </Dialog>
