@@ -206,45 +206,203 @@ router.post('/create-order', async (req, res) => {
     }
 });
 
-// Enable auto-order
-router.post('/auto-order/:productId', async (req, res) => {
+// Configure auto-order for a product
+router.post('/auto-order/configure/:productId', async (req, res) => {
     try {
         const { productId } = req.params;
-        const { location } = req.body;
+        const { supplierId, threshold, autoOrderQuantity, location } = req.body;
+
+        console.log('Configuring auto-order:', {
+            productId,
+            supplierId,
+            threshold,
+            autoOrderQuantity,
+            location
+        });
+
+        // Validate all required fields
+        if (!productId || !supplierId || !threshold || !autoOrderQuantity || !location) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields',
+                received: { productId, supplierId, threshold, autoOrderQuantity, location }
+            });
+        }
+
+        // Validate supplier exists and serves this location
+        const supplier = await User.findOne({
+            _id: supplierId,
+            isSupplier: true,
+            location: location
+        });
+
+        if (!supplier) {
+            return res.status(404).json({
+                success: false,
+                message: 'Supplier not found or not authorized for this location'
+            });
+        }
 
         // Find the product
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
         }
 
-        // Find the most reliable supplier in the location
-        const supplier = await User.findOne({
-            isSupplier: true,
-            location: location === 'All' ? { $exists: true } : location
-        }).sort({ reliability: -1 }); // Assuming we track supplier reliability
+        // Update or create stock alert configuration
+        const stockAlert = await StockAlert.findOneAndUpdate(
+            { 
+                productId,
+                location 
+            },
+            {
+                productId,
+                type: 'low_stock',
+                threshold: parseInt(threshold),
+                autoOrderEnabled: true,
+                location,
+                autoOrderQuantity: parseInt(autoOrderQuantity),
+                supplierId,
+                status: 'active',
+                currentStock: product.countInStock
+            },
+            { 
+                upsert: true, 
+                new: true,
+                runValidators: true
+            }
+        );
 
-        if (!supplier) {
-            return res.status(404).json({ error: 'No suitable supplier found' });
+        // Check if we need to create an immediate order
+        if (product.countInStock <= parseInt(threshold)) {
+            console.log('Stock below threshold, creating immediate order');
+            
+            const newOrder = new StockOrder({
+                productId: product._id,
+                supplierId: supplier._id,
+                quantity: parseInt(autoOrderQuantity),
+                location,
+                status: 'pending',
+                autoOrdered: true,
+                orderDate: new Date()
+            });
+
+            await newOrder.save();
+            console.log('Auto-order created:', newOrder);
         }
 
-        // Create stock alert
-        const alert = new StockAlert({
-            productId,
-            type: 'low_stock',
-            threshold: Math.ceil(product.maxStock * 0.3), // Alert at 30% of max stock
-            currentStock: product.countInStock,
+        // Set up stock monitoring
+        await Product.findByIdAndUpdate(productId, {
             autoOrderEnabled: true,
-            location,
-            supplierId: supplier._id
+            autoOrderThreshold: parseInt(threshold),
+            autoOrderQuantity: parseInt(autoOrderQuantity),
+            preferredSupplierId: supplierId
         });
 
-        await alert.save();
-        res.json({ message: 'Auto-order enabled successfully' });
+        res.status(200).json({
+            success: true,
+            message: 'Auto-order configuration saved successfully',
+            data: {
+                stockAlert,
+                currentStock: product.countInStock,
+                autoOrderEnabled: true
+            }
+        });
+
     } catch (error) {
-        res.status(500).json({ error: 'Failed to enable auto-order' });
+        console.error('Error configuring auto-order:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to configure auto-order',
+            error: error.message
+        });
     }
 });
+
+// Get auto-order configuration for a product
+router.get('/auto-order/config/:productId', async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { location } = req.query;
+
+        const config = await StockAlert.findOne({
+            productId,
+            location,
+            autoOrderEnabled: true
+        })
+        .populate('supplierId', 'name')
+        .populate('productId', 'name countInStock');
+
+        if (!config) {
+            return res.json({
+                autoOrderEnabled: false,
+                message: 'No auto-order configuration found'
+            });
+        }
+
+        res.json({
+            autoOrderEnabled: true,
+            threshold: config.threshold,
+            autoOrderQuantity: config.autoOrderQuantity,
+            supplier: config.supplierId,
+            currentStock: config.productId.countInStock
+        });
+
+    } catch (error) {
+        console.error('Error fetching auto-order config:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch auto-order configuration',
+            error: error.message
+        });
+    }
+});
+
+// Monitor stock levels and create auto-orders (run periodically)
+const checkAndCreateAutoOrders = async () => {
+    try {
+        const alerts = await StockAlert.find({
+            autoOrderEnabled: true,
+            status: 'active'
+        }).populate('productId');
+
+        for (const alert of alerts) {
+            if (alert.productId.countInStock <= alert.threshold) {
+                console.log(`Creating auto-order for ${alert.productId.name}`);
+                
+                // Check if there's already a pending order
+                const existingOrder = await StockOrder.findOne({
+                    productId: alert.productId._id,
+                    status: 'pending',
+                    autoOrdered: true
+                });
+
+                if (!existingOrder) {
+                    const newOrder = new StockOrder({
+                        productId: alert.productId._id,
+                        supplierId: alert.supplierId,
+                        quantity: alert.autoOrderQuantity,
+                        location: alert.location,
+                        status: 'pending',
+                        autoOrdered: true,
+                        orderDate: new Date()
+                    });
+
+                    await newOrder.save();
+                    console.log('Auto-order created:', newOrder);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error in auto-order check:', error);
+    }
+};
+
+// Run the check every hour
+setInterval(checkAndCreateAutoOrders, 3600000);
 
 // Get orders for a specific supplier
 router.get('/supplier-orders/:supplierId', async (req, res) => {
@@ -354,6 +512,49 @@ router.get('/supplier-delivered-orders/:supplierId', async (req, res) => {
         res.status(500).json({ 
             error: 'Failed to fetch delivered orders history',
             details: error.message 
+        });
+    }
+});
+
+// Add this route to disable auto-order
+router.post('/auto-order/disable/:productId', async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { location } = req.body;
+
+        // Find and update the stock alert to disable auto-order
+        const stockAlert = await StockAlert.findOneAndUpdate(
+            { 
+                productId,
+                location,
+                autoOrderEnabled: true 
+            },
+            { 
+                autoOrderEnabled: false,
+                status: 'inactive'
+            },
+            { new: true }
+        );
+
+        if (!stockAlert) {
+            return res.status(404).json({
+                success: false,
+                message: 'No active auto-order configuration found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Auto-order disabled successfully',
+            data: stockAlert
+        });
+
+    } catch (error) {
+        console.error('Error disabling auto-order:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to disable auto-order',
+            error: error.message
         });
     }
 });

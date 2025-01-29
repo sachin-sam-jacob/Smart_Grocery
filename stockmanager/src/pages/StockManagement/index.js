@@ -149,8 +149,12 @@ const StockManagement = () => {
     initializeData();
   }, []);
 
-  const handleAutoOrder = async (product) => {
+  const handleAutoOrder = (product) => {
+    console.log('Selected product for auto-order:', product);
     setSelectedAutoOrderProduct(product);
+    setSelectedSupplier(null);
+    setAutoOrderQuantity('');
+    setAutoOrderThreshold('');
     setAutoOrderDialogOpen(true);
   };
 
@@ -165,24 +169,47 @@ const StockManagement = () => {
         return;
       }
 
+      console.log('Selected Product:', selectedAutoOrderProduct);
+
+      const currentUser = getUserData();
       const configData = {
         supplierId: selectedSupplier._id,
         threshold: parseInt(autoOrderThreshold),
         autoOrderQuantity: parseInt(autoOrderQuantity),
-        location: user.location
+        location: currentUser.location
       };
 
-      const response = await fetchDataFromApi(
-        `/api/stock/auto-order/configure/${selectedAutoOrderProduct._id}`,
-        {
-          method: 'POST',
-          body: JSON.stringify(configData)
-        }
+      setProgress(30);
+
+      const productId = selectedAutoOrderProduct._id || selectedAutoOrderProduct.id;
+
+      if (!productId) {
+        throw new Error('Product ID is missing');
+      }
+
+      const response = await postData(
+        `/api/stock/auto-order/configure/${productId}`,
+        configData
       );
 
+      setProgress(70);
+
       if (response.error) {
-        throw new Error(response.error);
+        throw new Error(response.error || response.message);
       }
+
+      setProducts(prevProducts => prevProducts.map(product => {
+        if (product._id === productId || product.id === productId) {
+          return {
+            ...product,
+            autoOrderEnabled: true,
+            threshold: parseInt(autoOrderThreshold),
+            autoOrderQuantity: parseInt(autoOrderQuantity),
+            currentStock: response.data?.currentStock || product.currentStock
+          };
+        }
+        return product;
+      }));
 
       setAutoOrderDialogOpen(false);
       setSelectedSupplier(null);
@@ -196,7 +223,7 @@ const StockManagement = () => {
         msg: "Auto-order configured successfully"
       });
 
-      fetchStockData();
+      await fetchStockData();
 
     } catch (error) {
       console.error('Error configuring auto-order:', error);
@@ -205,11 +232,61 @@ const StockManagement = () => {
         error: true,
         msg: error.message || "Failed to configure auto-order"
       });
+    } finally {
+      setProgress(100);
+    }
+  };
+
+  const handleDisableAutoOrder = async (product) => {
+    try {
+      setProgress(30);
+      const currentUser = getUserData();
+      
+      const response = await postData(
+        `/api/stock/auto-order/disable/${product._id || product.id}`,
+        { location: currentUser.location }
+      );
+
+      setProgress(70);
+
+      if (response.error) {
+        throw new Error(response.error || response.message);
+      }
+
+      setProducts(prevProducts => prevProducts.map(p => {
+        if (p._id === product._id || p.id === product.id) {
+          return {
+            ...p,
+            autoOrderEnabled: false
+          };
+        }
+        return p;
+      }));
+
+      setAlertBox({
+        open: true,
+        error: false,
+        msg: "Auto-order disabled successfully"
+      });
+
+      await fetchStockData();
+
+    } catch (error) {
+      console.error('Error disabling auto-order:', error);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: error.message || "Failed to disable auto-order"
+      });
+    } finally {
+      setProgress(100);
     }
   };
 
   const handleManualOrder = (product) => {
     setSelectedProduct(product);
+    setSelectedSupplier(null);
+    setOrderQuantity('');
     setOrderDialogOpen(true);
   };
 
@@ -291,6 +368,41 @@ const StockManagement = () => {
     return { color: 'success', label: 'Good' };
   };
 
+  const renderAutoOrderStatus = (product) => (
+    <Chip 
+      icon={product.autoOrderEnabled ? <IoCheckmark /> : <IoWarning />}
+      label={product.autoOrderEnabled ? "Enabled" : "Disabled"}
+      color={product.autoOrderEnabled ? "success" : "default"}
+      size="small"
+    />
+  );
+
+  const renderAutoOrderButton = (product) => (
+    <>
+      {product.autoOrderEnabled ? (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          className="mr-2"
+          onClick={() => handleDisableAutoOrder(product)}
+        >
+          Disable Auto-Order
+        </Button>
+      ) : (
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          className="btn-blue mr-2"
+          onClick={() => handleAutoOrder(product)}
+        >
+          Enable Auto-Order
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <div className="p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -344,39 +456,15 @@ const StockManagement = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      {product.autoOrderEnabled ? (
-                        <Chip 
-                          icon={<IoCheckmark />}
-                          label="Enabled"
-                          color="success"
-                          size="small"
-                        />
-                      ) : (
-                        <Chip 
-                          icon={<IoWarning />}
-                          label="Disabled"
-                          color="default"
-                          size="small"
-                        />
-                      )}
+                      {renderAutoOrderStatus(product)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        className="btn-blue mr-2"
-                        onClick={() => handleAutoOrder(product)}
-                        disabled={product.autoOrderEnabled}
-                      >
-                        Enable Auto-Order
-                      </Button>
+                      {renderAutoOrderButton(product)}
                       <Button
                         variant="outlined"
                         color="primary"
                         size="small"
                         onClick={() => handleManualOrder(product)}
-                        disabled={product.currentStock > product.threshold * 0.5}
                       >
                         Order Stock
                       </Button>
