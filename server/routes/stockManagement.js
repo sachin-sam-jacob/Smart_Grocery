@@ -559,4 +559,76 @@ router.post('/auto-order/disable/:productId', async (req, res) => {
     }
 });
 
+// Add this route to handle order delivery and stock update
+router.post('/order/deliver/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        // Find the stock order
+        const stockOrder = await StockOrder.findById(orderId);
+        if (!stockOrder) {
+            return res.status(404).json({
+                success: false,
+                message: 'Stock order not found'
+            });
+        }
+
+        // Update the order status to delivered
+        stockOrder.status = 'delivered';
+        await stockOrder.save();
+
+        // Find and update the product stock
+        const product = await Product.findOne({ 
+            _id: stockOrder.productId,
+            $or: [
+                { location: stockOrder.location },
+                { location: "All" }
+            ]
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        // Update the product stock by adding the delivered quantity
+        product.countInStock += stockOrder.quantity;
+        await product.save();
+
+        // Update or resolve any related stock alerts
+        await StockAlert.findOneAndUpdate(
+            {
+                productId: stockOrder.productId,
+                location: stockOrder.location,
+                status: 'active'
+            },
+            {
+                $set: {
+                    currentStock: product.countInStock,
+                    status: product.countInStock > 0 ? 'resolved' : 'active'
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Order marked as delivered and stock updated',
+            data: {
+                stockOrder,
+                newStockLevel: product.countInStock
+            }
+        });
+
+    } catch (error) {
+        console.error('Error updating delivery status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update delivery status',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 

@@ -16,6 +16,7 @@ import {
     Chip
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
+import { postData, fetchDataFromApi } from '../../utils/api';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 const StockOrders = () => {
@@ -23,6 +24,8 @@ const StockOrders = () => {
     const [loading, setLoading] = useState(true);
     const { enqueueSnackbar } = useSnackbar();
     const user = JSON.parse(localStorage.getItem('user'));
+    const [progress, setProgress] = useState(0);
+    const [alertBox, setAlertBox] = useState({ open: false, error: false, msg: '' });
 
     useEffect(() => {
         fetchOrders();
@@ -30,18 +33,13 @@ const StockOrders = () => {
 
     const fetchOrders = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/stock/supplier-orders/${user.userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const data = await response.json();
+            const response = await fetchDataFromApi(`/api/stock/supplier-orders/${user.userId}`);
             
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to fetch orders');
+            if (response.error) {
+                throw new Error(response.error);
             }
             
-            setOrders(data);
+            setOrders(response);
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
         } finally {
@@ -51,28 +49,85 @@ const StockOrders = () => {
 
     const handleStatusUpdate = async (orderId, newStatus) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/stock/update-order-status/${orderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
+            if (newStatus === 'delivered') {
+                await handleDeliveryUpdate(orderId);
+                return;
+            }
 
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to update order status');
+            const response = await postData(
+                `/api/stock/update-order-status/${orderId}`,
+                { status: newStatus }
+            );
+
+            if (response.error) {
+                throw new Error(response.error || 'Failed to update order status');
             }
 
             setOrders(orders.map(order => 
-                order._id === orderId ? data : order
+                order._id === orderId ? response.data : order
             ));
             
             enqueueSnackbar('Order status updated successfully', { variant: 'success' });
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
+        }
+    };
+
+    const handleDeliveryUpdate = async (orderId) => {
+        try {
+            setProgress(30);
+            
+            const orderToUpdate = orders.find(order => order._id === orderId);
+            if (!orderToUpdate) {
+                throw new Error('Order not found');
+            }
+
+            const response = await postData(
+                `/api/stock/order/deliver/${orderId}`,
+                {
+                    productId: orderToUpdate.productId._id,
+                    quantity: orderToUpdate.quantity,
+                    location: orderToUpdate.location
+                }
+            );
+
+            setProgress(70);
+
+            if (response.error) {
+                throw new Error(response.error || response.message);
+            }
+
+            setOrders(prevOrders => prevOrders.map(order => {
+                if (order._id === orderId) {
+                    return {
+                        ...order,
+                        status: 'delivered',
+                        productId: {
+                            ...order.productId,
+                            countInStock: response.data.newStockLevel
+                        }
+                    };
+                }
+                return order;
+            }));
+
+            setAlertBox({
+                open: true,
+                error: false,
+                msg: `Order marked as delivered and stock updated to ${response.data.newStockLevel} units`
+            });
+
+            await fetchOrders();
+
+        } catch (error) {
+            console.error('Error updating delivery status:', error);
+            setAlertBox({
+                open: true,
+                error: true,
+                msg: error.message || "Failed to update delivery status"
+            });
+        } finally {
+            setProgress(100);
         }
     };
 
