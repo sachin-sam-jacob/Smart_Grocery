@@ -30,6 +30,9 @@ import ListPincode from './pages/Pincode/ListPincode';
 import { MyContextProvider } from './contexts/MyContext';
 import StockOrders from './components/StockOrders';
 import OrderHistory from './components/StockOrders/OrderHistory';
+import ProductManagement from './components/ProductManagement';
+import { Box } from '@mui/material';
+import { SnackbarProvider } from 'notistack';
 
 const MyContext = createContext();
 
@@ -152,81 +155,84 @@ function App() {
 
   return (
     <MyContextProvider>
-      <BrowserRouter>
-        <MyContext.Provider value={values}>
+      <SnackbarProvider maxSnack={3}>
+        <BrowserRouter>
+          <MyContext.Provider value={values}>
 
-          <LoadingBar
-            color='#f11946'
-            progress={progress}
-            onLoaderFinished={() => setProgress(0)}
-            className='topLoadingBar'
-          />
+            <LoadingBar
+              color='#f11946'
+              progress={progress}
+              onLoaderFinished={() => setProgress(0)}
+              className='topLoadingBar'
+            />
 
-          <Snackbar open={alertBox.open} autoHideDuration={6000} onClose={handleClose}>
-            <Alert
-              onClose={handleClose}
-              autoHideDuration={6000}
-              severity={alertBox.error === false ? "success" : 'error'}
-              variant="filled"
-              sx={{ width: '100%' }}
-            >
-              {alertBox.msg}
-            </Alert>
-          </Snackbar>
+            <Snackbar open={alertBox.open} autoHideDuration={6000} onClose={handleClose}>
+              <Alert
+                onClose={handleClose}
+                autoHideDuration={6000}
+                severity={alertBox.error === false ? "success" : 'error'}
+                variant="filled"
+                sx={{ width: '100%' }}
+              >
+                {alertBox.msg}
+              </Alert>
+            </Snackbar>
 
 
-          {isLogin && <Header />}
-          <div className='main d-flex'>
-            {isLogin && (
-              <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''}`}>
-                <Sidebar />
+            {isLogin && <Header />}
+            <div className='main d-flex'>
+              {isLogin && (
+                <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''}`}>
+                  <Sidebar />
+                </div>
+              )}
+
+              <div className={`content ${!isLogin && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`}>
+                <Routes>
+                  <Route path="/login" element={!isLogin ? <Login /> : <Navigate to="/" />} />
+                  <Route path="/signup" element={!isLogin ? <SignUp /> : <Navigate to="/" />} />
+                  
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/products" exact={true} element={<Products />} />
+                  <Route path="/product/details/:id" exact={true} element={<ProductDetails />} />
+                  <Route path="/product/upload" exact={true} element={<ProductUpload />} />
+                  <Route path="/product/edit/:id" exact={true} element={<EditProduct />} />
+                  <Route path="/category" exact={true} element={<Category />} />
+                  <Route path="/category/add" exact={true} element={<CategoryAdd />} />
+                  <Route path="/category/edit/:id" exact={true} element={<EditCategory />} />
+                  <Route path="/subCategory/" exact={true} element={<SubCatList />} />
+                  <Route path="/subCategory/add" exact={true} element={<SubCatAdd />} />
+                  <Route path="/productWEIGHT/add" exact={true} element={<ProductWeight />} />
+                  <Route path="/productSIZE/add" exact={true} element={<ProductSize />} />
+                  <Route path="/orders/" exact={true} element={<Orders />} />
+                  <Route path="/addpincode" exact={true} element={<AddPincode />}/>
+                  <Route path="/listpincode" exact={true} element={<ListPincode />}/>
+                  <Route path="/stock-orders" element={<StockOrders />} />
+                  <Route path="/stock-orders/history" element={<OrderHistory />} />
+                  <Route path="/supplier/products" element={<ProductManagement />} />
+
+                  <Route path="*" element={<Navigate to={isLogin ? "/" : "/login"} />} />
+                </Routes>
               </div>
-            )}
-
-            <div className={`content ${!isLogin && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`}>
-              <Routes>
-                <Route path="/login" element={!isLogin ? <Login /> : <Navigate to="/" />} />
-                <Route path="/signup" element={!isLogin ? <SignUp /> : <Navigate to="/" />} />
-                
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/products" exact={true} element={<Products />} />
-                <Route path="/product/details/:id" exact={true} element={<ProductDetails />} />
-                <Route path="/product/upload" exact={true} element={<ProductUpload />} />
-                <Route path="/product/edit/:id" exact={true} element={<EditProduct />} />
-                <Route path="/category" exact={true} element={<Category />} />
-                <Route path="/category/add" exact={true} element={<CategoryAdd />} />
-                <Route path="/category/edit/:id" exact={true} element={<EditCategory />} />
-                <Route path="/subCategory/" exact={true} element={<SubCatList />} />
-                <Route path="/subCategory/add" exact={true} element={<SubCatAdd />} />
-                <Route path="/productWEIGHT/add" exact={true} element={<ProductWeight />} />
-                <Route path="/productSIZE/add" exact={true} element={<ProductSize />} />
-                <Route path="/orders/" exact={true} element={<Orders />} />
-                <Route path="/addpincode" exact={true} element={<AddPincode />}/>
-                <Route path="/listpincode" exact={true} element={<ListPincode />}/>
-                <Route path="/stock-orders" element={<StockOrders />} />
-                <Route path="/stock-orders/history" element={<OrderHistory />} />
-
-                <Route path="*" element={<Navigate to={isLogin ? "/" : "/login"} />} />
-              </Routes>
             </div>
-          </div>
-        </MyContext.Provider>
-      </BrowserRouter>
+          </MyContext.Provider>
+        </BrowserRouter>
+      </SnackbarProvider>
     </MyContextProvider>
   );
 }

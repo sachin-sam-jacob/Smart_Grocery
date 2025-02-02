@@ -17,6 +17,7 @@ import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincod
 import { MdShoppingBag } from "react-icons/md";
 import { IoMdCart } from "react-icons/io";
 import { IoCartOutline } from "react-icons/io5"; // Add this import for the stock orders icon
+import { MdInventory } from "react-icons/md"; // Add this import for Product Management icon
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -108,29 +109,13 @@ const Sidebar = () => {
                         Dashboard
                     </Button>
                 </li>
-
-                {/* Product Management */}
                 <li>
                     <Button className={`w-100 ${activeTab === 2 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(2)}>
-                        <span className='icon'><MdShoppingBag /></span>
-                        Product Management
-                        <span className='arrow'><FaAngleRight /></span>
-                    </Button>
-                    <div className={`submenuWrapper ${activeTab === 2 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
-                        <ul className='submenu'>
-                            <li><Link to="/products">My Products</Link></li>
-                            <li><Link to="/product/upload">Add New Product</Link></li>
-                        </ul>
-                    </div>
-                </li>
-                {/* Add Stock Orders menu item */}
-                <li>
-                    <Button className={`w-100 ${activeTab === 4 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(4)}>
                         <span className='icon'><IoCartOutline /></span>
                         Stock Orders
                         <span className='arrow'><FaAngleRight /></span>
                     </Button>
-                    <div className={`submenuWrapper ${activeTab === 4 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
+                    <div className={`submenuWrapper ${activeTab === 2 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
                         <ul className='submenu'>
                             <li>
                                 <Link to="/stock-orders">View Orders</Link>
@@ -141,8 +126,12 @@ const Sidebar = () => {
                         </ul>
                     </div>
                 </li>
-
-                {/* Communications */}
+                <li>
+                    <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} onClick={() => handleNavigation('/supplier/products', 3)}>
+                        <span className='icon'><MdInventory /></span>
+                        Product Management
+                    </Button>
+                </li>
                 <li>
                     <Button className={`w-100 ${activeTab === 4 ? 'active' : ''}`} onClick={() => handleNavigation('/communications', 4)}>
                         <span className='icon'><MdMessage /></span>
