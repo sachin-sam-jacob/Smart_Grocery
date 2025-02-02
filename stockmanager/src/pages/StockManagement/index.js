@@ -301,16 +301,36 @@ const StockManagement = () => {
         return;
       }
 
-      console.log('Selected Product:', selectedProduct);
-      console.log('Selected Supplier:', selectedSupplier);
-      console.log('User:', user);
+      setProgress(30);
+      console.log("selectedSupplier:", selectedSupplier);
+      console.log("selectedProduct:", selectedProduct);
+
+      // Fetch supplier price using product name
+      const supplierPriceResponse = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/supplier-products/supplier/${selectedSupplier._id}/product/${encodeURIComponent(selectedProduct.name)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      const supplierPriceData = await supplierPriceResponse.json();
+      
+      if (!supplierPriceResponse.ok) {
+        throw new Error(supplierPriceData.error || 'Failed to fetch supplier price');
+      }
+
+      // Calculate total amount using the fetched supplier price
+      const totalAmount = Number((supplierPriceData.price * parseInt(orderQuantity)).toFixed(2));
 
       const orderData = {
         productId: selectedProduct._id || selectedProduct.id,
         supplierId: selectedSupplier._id,
         quantity: parseInt(orderQuantity),
         location: user.location,
-        status: 'pending'
+        status: 'pending',
+        totalAmount: totalAmount
       };
 
       console.log('Submitting order with data:', JSON.stringify(orderData, null, 2));
@@ -324,12 +344,16 @@ const StockManagement = () => {
         body: JSON.stringify(orderData)
       });
 
+      setProgress(70);
+
       const data = await response.json();
       console.log('Server response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || data.message || 'Failed to create order');
       }
+
+      setProgress(90);
 
       setSelectedSupplier(null);
       setOrderQuantity('');
@@ -349,6 +373,89 @@ const StockManagement = () => {
         open: true,
         error: true,
         msg: error.message || "Failed to submit order"
+      });
+    } finally {
+      setProgress(100);
+    }
+  };
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      const currentUser = getUserData();
+      
+      // Only suppliers can mark as delivered
+      if (newStatus === 'delivered' && !currentUser.isSupplier) {
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Only suppliers can mark orders as delivered"
+        });
+        return;
+      }
+
+      const response = await postData(`/api/stock/update-order-status/${orderId}`, {
+        status: newStatus,
+        location: currentUser.location
+      });
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Refresh data after status update
+      await fetchStockData();
+      
+      setAlertBox({
+        open: true,
+        error: false,
+        msg: `Order ${newStatus} successfully`
+      });
+
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: error.message || "Failed to update order status"
+      });
+    }
+  };
+
+  const handleDownloadInvoice = async (order) => {
+    try {
+      const currentUser = getUserData();
+      if (!currentUser.isStockManager) {
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Only stock managers can download invoices"
+        });
+        return;
+      }
+
+      // Generate and download invoice logic here
+      const response = await postData(`/api/stock/generate-invoice/${order._id}`);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${order._id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: error.message || "Failed to download invoice"
       });
     }
   };
@@ -402,6 +509,82 @@ const StockManagement = () => {
       )}
     </>
   );
+
+  const renderActionButtons = (order) => {
+    const currentUser = getUserData();
+    
+    if (currentUser.isSupplier) {
+      // Supplier view
+      return order.status === 'approved' ? (
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => handleStatusUpdate(order._id, 'delivered')}
+        >
+          Mark as Delivered
+        </Button>
+      ) : null;
+    } else if (currentUser.isStockManager) {
+      // Stock Manager view
+      if (order.status === 'pending') {
+        return (
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={() => handleStatusUpdate(order._id, 'approved')}
+          >
+            Approve Order
+          </Button>
+        );
+      } else if (order.status === 'delivered') {
+        return (
+          <>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => handlePayment(order)}
+              style={{ marginRight: '8px' }}
+            >
+              Process Payment
+            </Button>
+            <Button 
+              variant="outlined" 
+              color="primary"
+              onClick={() => handleDownloadInvoice(order)}
+            >
+              Download Invoice
+            </Button>
+          </>
+        );
+      }
+    }
+    return null;
+  };
+
+  const handlePayment = async (order) => {
+    try {
+      const currentUser = getUserData();
+      if (!currentUser.isStockManager) {
+        setAlertBox({
+          open: true,
+          error: true,
+          msg: "Only stock managers can process payments"
+        });
+        return;
+      }
+
+      // Navigate to payment page with order details
+      window.location.href = `/stock-payments?orderId=${order._id}`;
+
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setAlertBox({
+        open: true,
+        error: true,
+        msg: error.message || "Failed to process payment"
+      });
+    }
+  };
 
   return (
     <div className="p-4">

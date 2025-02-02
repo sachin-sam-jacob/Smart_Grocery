@@ -117,8 +117,10 @@ const OrderHistory = () => {
                             <TableCell sx={tableHeaderCellStyles}>Order Date</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Product</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Quantity</TableCell>
+                            <TableCell sx={tableHeaderCellStyles}>Total Amount</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Location</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Delivery Date</TableCell>
+                            <TableCell sx={tableHeaderCellStyles}>Payment Status</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Status</TableCell>
                         </TableRow>
                     </TableHead>
@@ -148,6 +150,7 @@ const OrderHistory = () => {
                                         {order.quantity} units
                                     </Typography>
                                 </TableCell>
+                                <TableCell sx={tableCellStyles}>{order.totalAmount}</TableCell>
                                 <TableCell sx={tableCellStyles}>{order.location}</TableCell>
                                 <TableCell sx={tableCellStyles}>
                                     {new Date(order.updatedAt).toLocaleDateString('en-US', {
@@ -155,6 +158,16 @@ const OrderHistory = () => {
                                         month: 'short',
                                         day: 'numeric'
                                     })}
+                                </TableCell>
+                                <TableCell sx={tableCellStyles}>
+                                    <Chip 
+                                        label={order.paymentStatus}
+                                        color={order.paymentStatus === 'completed' ? 'success' : 'warning'}
+                                        sx={{
+                                            fontWeight: 600,
+                                            borderRadius: '16px'
+                                        }}
+                                    />
                                 </TableCell>
                                 <TableCell sx={tableCellStyles}>
                                     <Box sx={{

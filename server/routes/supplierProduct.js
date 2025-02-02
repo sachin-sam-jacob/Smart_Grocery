@@ -166,4 +166,35 @@ router.get('/by-name/:name', async (req, res) => {
     }
 });
 
+// Get supplier product by supplier ID and product name
+router.get('/supplier/:supplierId/product/:productName', async (req, res) => {
+    try {
+        const { supplierId, productName } = req.params;
+        
+        const supplierProduct = await SupplierProduct.findOne({
+            supplierId: supplierId,
+            name: decodeURIComponent(productName)
+        });
+
+        if (!supplierProduct) {
+            return res.status(404).json({
+                error: 'Supplier product not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            price: supplierProduct.price,
+            productId: supplierProduct._id
+        });
+
+    } catch (error) {
+        console.error('Error fetching supplier product:', error);
+        res.status(500).json({
+            error: 'Failed to fetch supplier product',
+            details: error.message
+        });
+    }
+});
+
 module.exports = router; 

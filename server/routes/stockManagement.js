@@ -4,6 +4,14 @@ const { StockAlert } = require('../models/stockManagement');
 const { StockOrder } = require('../models/StockOrder');
 const { Product } = require('../models/products');
 const { User } = require('../models/user');
+const { SupplierProduct } = require('../models/supplierProduct');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 // Add this middleware before your route handler
 const checkDistrictManager = async (req, res, next) => {
@@ -151,48 +159,38 @@ router.get('/suppliers-by-location/:location', async (req, res) => {
 router.post('/create-order', async (req, res) => {
     console.log('Received order request body:', req.body);
     try {
-        const { productId, supplierId, quantity, location, status } = req.body;
-
-        // Log all received data
-        console.log('Received order data:', {
-            productId,
-            supplierId,
-            quantity,
-            location,
-            status
-        });
+        const { productId, supplierId, quantity, location, status, totalAmount } = req.body;
 
         // Validate required fields
-        if (!productId || !supplierId || !quantity || !location ) {
+        if (!productId || !supplierId || !quantity || !location || totalAmount === undefined) {
             console.log('Missing required fields');
             return res.status(400).json({ 
                 error: 'Missing required fields',
-                received: { productId, supplierId, quantity, location }
+                received: { productId, supplierId, quantity, location, totalAmount }
             });
         }
-
-        // Create new stock order
+        console.log("totalAmount:",totalAmount);
+        // Create new stock order using the totalAmount from frontend
         const stockOrder = new StockOrder({
             productId,
             supplierId,
             quantity: parseInt(quantity),
             location,
             status: status || 'pending',
-            orderDate: new Date()
+            orderDate: new Date(),
+            totalAmount: Number(totalAmount), // Ensure it's stored as a number
+            paymentStatus: 'pending'
         });
 
         console.log('Created stock order object:', stockOrder);
 
         // Save the order
         const savedOrder = await stockOrder.save();
-        console.log('Saved order to database:', savedOrder);
         
         // Populate the saved order with related data
         const populatedOrder = await StockOrder.findById(savedOrder._id)
             .populate('productId', 'name')
             .populate('supplierId', 'name');
-
-        console.log('Populated order data:', populatedOrder);
 
         res.status(201).json(populatedOrder);
 
@@ -200,8 +198,7 @@ router.post('/create-order', async (req, res) => {
         console.error('Error creating stock order:', error);
         res.status(500).json({ 
             error: 'Failed to create stock order',
-            details: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            details: error.message
         });
     }
 });
@@ -210,70 +207,42 @@ router.post('/create-order', async (req, res) => {
 router.post('/auto-order/configure/:productId', async (req, res) => {
     try {
         const { productId } = req.params;
-        const { supplierId, threshold, autoOrderQuantity, location } = req.body;
+        const { threshold, autoOrderQuantity, supplierId, location } = req.body;
 
-        console.log('Configuring auto-order:', {
-            productId,
-            supplierId,
-            threshold,
-            autoOrderQuantity,
-            location
+        // Get supplier's price for the product
+        const supplierProduct = await SupplierProduct.findOne({
+            productId: productId,
+            supplierId: supplierId
         });
 
-        // Validate all required fields
-        if (!productId || !supplierId || !threshold || !autoOrderQuantity || !location) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields',
-                received: { productId, supplierId, threshold, autoOrderQuantity, location }
-            });
-        }
-
-        // Validate supplier exists and serves this location
-        const supplier = await User.findOne({
-            _id: supplierId,
-            isSupplier: true,
-            location: location
-        });
-
-        if (!supplier) {
-            return res.status(404).json({
-                success: false,
-                message: 'Supplier not found or not authorized for this location'
-            });
-        }
-
-        // Find the product
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
+            throw new Error('Product not found');
         }
 
-        // Update or create stock alert configuration
+        const supplier = await User.findById(supplierId);
+        if (!supplier) {
+            throw new Error('Supplier not found');
+        }
+
+        // Calculate total amount for auto-order
+        const pricePerUnit = supplierProduct ? supplierProduct.price : product.price;
+        const calculatedTotalAmount = Number((pricePerUnit * parseInt(autoOrderQuantity)).toFixed(2));
+
+        // Create or update stock alert
         const stockAlert = await StockAlert.findOneAndUpdate(
             { 
                 productId,
-                location 
+                location,
+                status: 'active'
             },
             {
-                productId,
-                type: 'low_stock',
                 threshold: parseInt(threshold),
+                currentStock: product.countInStock,
                 autoOrderEnabled: true,
-                location,
-                autoOrderQuantity: parseInt(autoOrderQuantity),
-                supplierId,
-                status: 'active',
-                currentStock: product.countInStock
+                type: 'low_stock'
             },
-            { 
-                upsert: true, 
-                new: true,
-                runValidators: true
-            }
+            { upsert: true, new: true }
         );
 
         // Check if we need to create an immediate order
@@ -287,7 +256,8 @@ router.post('/auto-order/configure/:productId', async (req, res) => {
                 location,
                 status: 'pending',
                 autoOrdered: true,
-                orderDate: new Date()
+                orderDate: new Date(),
+                totalAmount: calculatedTotalAmount // Add the calculated total amount
             });
 
             await newOrder.save();
@@ -628,6 +598,131 @@ router.post('/order/deliver/:orderId', async (req, res) => {
             message: 'Failed to update delivery status',
             error: error.message
         });
+    }
+});
+
+router.post('/update-order-status/:id', async (req, res) => {
+    try {
+        const { status, location } = req.body;
+        const order = await StockOrder.findById(req.params.id);
+        
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        order.status = status;
+        await order.save();
+
+        res.json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/generate-invoice/:id', async (req, res) => {
+    try {
+        const order = await StockOrder.findById(req.params.id)
+            .populate('productId')
+            .populate('supplierId');
+            
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Generate PDF invoice logic here
+        // Return the PDF data
+        
+        res.json({ success: true, data: pdfData });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all orders for stock management
+router.get('/orders', async (req, res) => {
+    try {
+        const orders = await StockOrder.find()
+            .populate('productId', 'name currentStock threshold')
+            .populate('supplierId', 'name')
+            .sort({ orderDate: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: orders
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch orders',
+            details: error.message
+        });
+    }
+});
+
+// Create Razorpay order
+router.post('/orders/:id/create-payment', async (req, res) => {
+    try {
+        const order = await StockOrder.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        const options = {
+            amount: Math.round(order.totalAmount * 100), // amount in paise
+            currency: 'INR',
+            receipt: order._id.toString()
+        };
+
+        const razorpayOrder = await razorpay.orders.create(options);
+
+        res.json({
+            success: true,
+            orderId: razorpayOrder.id
+        });
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verify Razorpay payment
+router.post('/orders/:id/verify-payment', async (req, res) => {
+    try {
+        const { paymentId, signature, orderId, amount } = req.body;
+        const order = await StockOrder.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Verify signature
+        const text = orderId + '|' + paymentId;
+        const generated_signature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(text)
+            .digest('hex');
+
+        if (generated_signature === signature) {
+            order.paymentStatus = 'completed';
+            order.paymentMethod = 'razorpay';
+            order.paymentDate = new Date();
+            order.invoiceNumber = `INV-${Date.now()}-${order._id.toString().slice(-4)}`;
+            await order.save();
+
+            res.json({
+                success: true,
+                message: 'Payment verified successfully'
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                error: 'Payment verification failed'
+            });
+        }
+    } catch (error) {
+        console.error('Error verifying payment:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 

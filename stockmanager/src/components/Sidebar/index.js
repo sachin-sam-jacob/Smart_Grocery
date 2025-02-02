@@ -16,6 +16,9 @@ import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager ic
 import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincode icon
 import { FaUsers } from "react-icons/fa";
 import { IoBarChart } from "react-icons/io5";
+import { ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -102,7 +105,8 @@ const Sidebar = () => {
             icon: <IoBarChart />,
             submenu: [
                 { title: "Stock Overview", path: "/stock-management" },
-                { title: "Stock Alerts", path: "/stock-alerts" }
+                { title: "Stock Alerts", path: "/stock-alerts" },
+                { title: "Payments", path: "/stock-payments" }
             ]
         }
     ];
@@ -193,6 +197,7 @@ const Sidebar = () => {
                             <ul className='submenu'>
                                 <li><Link to="/stock-management">Stock Overview</Link></li>
                                 <li><Link to="/stock-alerts">Stock Alerts</Link></li>
+                                <li><Link to="/stock-payments">Payments</Link></li>
                             </ul>
                         </div>
                     </li>

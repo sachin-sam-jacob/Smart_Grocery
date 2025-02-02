@@ -69,6 +69,28 @@ const stockOrderSchema = new mongoose.Schema({
     orderDate: {
         type: Date,
         default: Date.now
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'completed'],
+        default: 'pending'
+    },
+    paymentMethod: {
+        type: String,
+        enum: ['bank_transfer', 'upi', 'cash'],
+        default: null
+    },
+    paymentDate: {
+        type: Date
+    },
+    invoiceNumber: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    totalAmount: {
+        type: Number,
+        required: true
     }
 });
 
