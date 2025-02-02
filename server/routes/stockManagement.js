@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { StockAlert } = require('../models/stockManagement');
-const { StockOrder } = require('../models/StockOrder');
+const StockOrder = require('../models/StockOrder');
 const { Product } = require('../models/products');
 const { User } = require('../models/user');
 const { SupplierProduct } = require('../models/supplierProduct');
@@ -473,8 +473,8 @@ router.get('/supplier-delivered-orders/:supplierId', async (req, res) => {
             status: 'delivered'
         })
         .populate('productId', 'name price')
-        .sort({ updatedAt: -1 }) // Sort by delivery date (updatedAt)
-        .select('orderDate productId quantity location status updatedAt'); // Select only needed fields
+        .sort({ updatedAt: -1 }) // Sort by delivery date
+        .select('orderDate productId quantity location status updatedAt totalAmount paymentStatus paymentMethod paymentDate'); // Added payment fields
 
         res.status(200).json(deliveredOrders);
     } catch (error) {
@@ -663,66 +663,162 @@ router.get('/orders', async (req, res) => {
 // Create Razorpay order
 router.post('/orders/:id/create-payment', async (req, res) => {
     try {
-        const order = await StockOrder.findById(req.params.id);
+        const order = await StockOrder.findById(req.params.id)
+            .populate('supplierId', 'name email');
+
         if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Order not found' 
+            });
+        }
+
+        // Check if payment is already completed
+        if (order.paymentStatus === 'completed') {
+            return res.status(400).json({
+                success: false,
+                error: 'Payment already completed for this order'
+            });
         }
 
         const options = {
-            amount: Math.round(order.totalAmount * 100), // amount in paise
+            amount: Math.round(order.totalAmount * 100), // Convert to paise
             currency: 'INR',
-            receipt: order._id.toString()
+            receipt: order._id.toString(),
+            payment_capture: 1
         };
 
+        console.log('Creating Razorpay order with options:', options);
+
         const razorpayOrder = await razorpay.orders.create(options);
+        console.log('Razorpay order created:', razorpayOrder);
 
         res.json({
             success: true,
-            orderId: razorpayOrder.id
+            orderId: razorpayOrder.id,
+            amount: order.totalAmount,
+            currency: 'INR'
         });
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
     }
 });
 
 // Verify Razorpay payment
 router.post('/orders/:id/verify-payment', async (req, res) => {
     try {
-        const { paymentId, signature, orderId, amount } = req.body;
-        const order = await StockOrder.findById(req.params.id);
+        const { paymentId, signature, orderId } = req.body;
+        console.log('Payment verification request received:', req.body);
 
+        const order = await StockOrder.findById(req.params.id);
         if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+            console.log('Order not found:', req.params.id);
+            return res.status(404).json({ success: false, error: 'Order not found' });
         }
 
-        // Verify signature
-        const text = orderId + '|' + paymentId;
-        const generated_signature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(text)
-            .digest('hex');
+        try {
+            // Get payment details from Razorpay
+            const payment = await razorpay.payments.fetch(paymentId);
+            console.log('Razorpay payment details:', payment);
 
-        if (generated_signature === signature) {
-            order.paymentStatus = 'completed';
-            order.paymentMethod = 'razorpay';
-            order.paymentDate = new Date();
-            order.invoiceNumber = `INV-${Date.now()}-${order._id.toString().slice(-4)}`;
-            await order.save();
+            // Generate signature
+            const secret = process.env.RAZORPAY_KEY_SECRET;
+            const generatedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(`${orderId}|${paymentId}`)
+                .digest('hex');
 
-            res.json({
-                success: true,
-                message: 'Payment verified successfully'
-            });
-        } else {
-            res.status(400).json({
+            console.log('Generated signature:', generatedSignature);
+            console.log('Received signature:', signature);
+
+            // Verify signature
+            const isValid = generatedSignature === signature;
+            console.log('Signature verification:', isValid);
+
+            if (isValid && payment.status === 'captured') {
+                // Update order with payment details
+                const updatedOrder = await StockOrder.findByIdAndUpdate(
+                    order._id,
+                    {
+                        paymentStatus: 'completed',
+                        paymentMethod: 'razorpay',
+                        paymentDate: new Date(),
+                        paymentId: paymentId,
+                        razorpayOrderId: orderId,
+                        invoiceNumber: `INV-${Date.now()}-${order._id.toString().slice(-4)}`
+                    },
+                    { new: true }
+                );
+
+                if (!updatedOrder) {
+                    throw new Error('Failed to update order status');
+                }
+
+                console.log('Order updated successfully:', updatedOrder);
+
+                return res.json({
+                    success: true,
+                    message: 'Payment verified successfully',
+                    order: updatedOrder
+                });
+            } else {
+                console.log('Payment verification failed');
+                return res.status(400).json({
+                    success: false,
+                    error: !isValid ? 'Invalid signature' : 'Payment not captured'
+                });
+            }
+        } catch (razorpayError) {
+            console.error('Razorpay API error:', razorpayError);
+            return res.status(400).json({
                 success: false,
-                error: 'Payment verification failed'
+                error: 'Failed to verify payment with Razorpay',
+                details: razorpayError.message
             });
         }
     } catch (error) {
-        console.error('Error verifying payment:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Server error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+});
+
+// Get order details with payment status
+router.get('/orders/:id', async (req, res) => {
+    try {
+        const order = await StockOrder.findById(req.params.id)
+            .populate('productId', 'name price')
+            .populate('supplierId', 'name email');
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                error: 'Order not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            order: {
+                ...order.toObject(),
+                paymentStatus: order.paymentStatus || 'pending',
+                paymentDate: order.paymentDate,
+                invoiceNumber: order.invoiceNumber
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 

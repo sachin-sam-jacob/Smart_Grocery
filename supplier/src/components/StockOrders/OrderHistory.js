@@ -150,7 +150,7 @@ const OrderHistory = () => {
                                         {order.quantity} units
                                     </Typography>
                                 </TableCell>
-                                <TableCell sx={tableCellStyles}>{order.totalAmount}</TableCell>
+                                <TableCell sx={tableCellStyles}>₹{order.totalAmount?.toFixed(2)}</TableCell>
                                 <TableCell sx={tableCellStyles}>{order.location}</TableCell>
                                 <TableCell sx={tableCellStyles}>
                                     {new Date(order.updatedAt).toLocaleDateString('en-US', {
@@ -161,11 +161,12 @@ const OrderHistory = () => {
                                 </TableCell>
                                 <TableCell sx={tableCellStyles}>
                                     <Chip 
-                                        label={order.paymentStatus}
+                                        label={order.paymentStatus || 'pending'}
                                         color={order.paymentStatus === 'completed' ? 'success' : 'warning'}
                                         sx={{
                                             fontWeight: 600,
-                                            borderRadius: '16px'
+                                            borderRadius: '16px',
+                                            textTransform: 'capitalize'
                                         }}
                                     />
                                 </TableCell>

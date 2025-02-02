@@ -32,48 +32,6 @@ const Payment = () => {
         }
     };
 
-    const initializeRazorpay = (order) => {
-        const options = {
-            key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-            amount: order.totalAmount * 100, // Razorpay expects amount in paise
-            currency: 'INR',
-            name: 'Smart Grocery',
-            description: `Payment for Order ${order._id}`,
-            order_id: order.razorpayOrderId,
-            handler: async (response) => {
-                try {
-                    const paymentData = {
-                        orderId: order._id,
-                        paymentId: response.razorpay_payment_id,
-                        signature: response.razorpay_signature,
-                        amount: order.totalAmount
-                    };
-
-                    const result = await postData(`/api/stock/orders/${order._id}/verify-payment`, paymentData);
-                    
-                    if (result.success) {
-                        enqueueSnackbar('Payment successful', { variant: 'success' });
-                        fetchOrders();
-                    } else {
-                        throw new Error(result.error || 'Payment verification failed');
-                    }
-                } catch (error) {
-                    enqueueSnackbar(error.message, { variant: 'error' });
-                }
-            },
-            prefill: {
-                name: order.supplierId.name,
-                email: order.supplierId.email
-            },
-            theme: {
-                color: '#3f51b5'
-            }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-    };
-
     const handlePayment = async (order) => {
         try {
             setLoading(true);
@@ -81,15 +39,72 @@ const Payment = () => {
                 amount: order.totalAmount
             });
             
-            if (response.success) {
-                initializeRazorpay({
-                    ...order,
-                    razorpayOrderId: response.orderId
-                });
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to create payment order');
             }
+
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+                amount: Math.round(order.totalAmount * 100),
+                currency: 'INR',
+                name: 'Smart Grocery',
+                description: `Payment for Order ${order._id}`,
+                order_id: response.orderId,
+                handler: async function (razorpayResponse) {
+                    try {
+                        console.log('Payment successful, verifying...', razorpayResponse);
+                        
+                        const verificationData = {
+                            orderId: razorpayResponse.razorpay_order_id,
+                            paymentId: razorpayResponse.razorpay_payment_id,
+                            signature: razorpayResponse.razorpay_signature
+                        };
+
+                        console.log('Sending verification request:', verificationData);
+
+                        const result = await postData(
+                            `/api/stock/orders/${order._id}/verify-payment`,
+                            verificationData
+                        );
+                        
+                        if (result.success) {
+                            enqueueSnackbar('Payment successful', { variant: 'success' });
+                            await fetchOrders(); // Refresh the orders list
+                        } else {
+                            throw new Error(result.error || 'Payment verification failed');
+                        }
+                    } catch (error) {
+                        console.error('Payment verification error:', error);
+                        enqueueSnackbar(error.message || 'Payment verification failed', { variant: 'error' });
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+                prefill: {
+                    name: order.supplierId?.name || '',
+                    email: order.supplierId?.email || ''
+                },
+                theme: {
+                    color: '#3f51b5'
+                },
+                modal: {
+                    ondismiss: function() {
+                        setLoading(false);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                console.error('Payment failed:', response.error);
+                enqueueSnackbar('Payment failed: ' + response.error.description, { variant: 'error' });
+                setLoading(false);
+            });
+            
+            rzp.open();
         } catch (error) {
-            enqueueSnackbar('Error initiating payment', { variant: 'error' });
-        } finally {
+            console.error('Payment initiation error:', error);
+            enqueueSnackbar(error.message || 'Error initiating payment', { variant: 'error' });
             setLoading(false);
         }
     };
