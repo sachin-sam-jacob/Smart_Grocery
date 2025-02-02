@@ -642,11 +642,11 @@ router.post('/generate-invoice/:id', async (req, res) => {
 router.get('/orders', async (req, res) => {
     try {
         const orders = await StockOrder.find()
-            .populate('productId', 'name currentStock threshold')
-            .populate('supplierId', 'name')
-            .sort({ orderDate: -1 });
+            .populate('supplierId', 'name email _id')
+            .populate('productId', 'name price _id')
+            .sort({ createdAt: -1 });
 
-        res.status(200).json({
+        res.json({
             success: true,
             data: orders
         });
@@ -654,8 +654,7 @@ router.get('/orders', async (req, res) => {
         console.error('Error fetching orders:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch orders',
-            details: error.message
+            error: 'Failed to fetch orders'
         });
     }
 });

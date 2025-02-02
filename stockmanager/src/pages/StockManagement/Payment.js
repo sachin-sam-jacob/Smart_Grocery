@@ -11,16 +11,21 @@ import {
     Paper,
     Button,
     Chip,
-    CircularProgress
+    CircularProgress,
+    Modal
 } from '@mui/material';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useSnackbar } from 'notistack';
 import { fetchDataFromApi, postData } from '../../utils/api';
+import Invoice from '../../components/Invoice/Invoice';
 
 const Payment = () => {
     const [orders, setOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState({}); // Track loading state per order
     const [loadingBulkPayment, setLoadingBulkPayment] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [openInvoice, setOpenInvoice] = useState(false);
 
     const fetchOrders = async () => {
         try {
@@ -200,6 +205,11 @@ const Payment = () => {
         }
     };
 
+    const handleViewInvoice = (order) => {
+        setSelectedOrder(order);
+        setOpenInvoice(true);
+    };
+
     useEffect(() => {
         fetchOrders();
     }, []);
@@ -250,14 +260,24 @@ const Payment = () => {
                                     />
                                 </TableCell>
                                 <TableCell>
-                                    {order.status === 'delivered' && order.paymentStatus === 'pending' && (
-                                        <Button
-                                            variant="contained"
-                                            onClick={() => handlePayment(order)}
-                                            disabled={loadingOrders[order._id] || loadingBulkPayment}
-                                        >
-                                            {loadingOrders[order._id] ? <CircularProgress size={24} /> : 'Pay Now'}
-                                        </Button>
+                                    {order.status === 'delivered' && (
+                                        order.paymentStatus === 'pending' ? (
+                                            <Button
+                                                variant="contained"
+                                                onClick={() => handlePayment(order)}
+                                                disabled={loadingOrders[order._id] || loadingBulkPayment}
+                                            >
+                                                {loadingOrders[order._id] ? <CircularProgress size={24} /> : 'Pay Now'}
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<ReceiptIcon />}
+                                                onClick={() => handleViewInvoice(order)}
+                                            >
+                                                View Invoice
+                                            </Button>
+                                        )
                                     )}
                                 </TableCell>
                             </TableRow>
@@ -265,6 +285,26 @@ const Payment = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Modal
+                open={openInvoice}
+                onClose={() => setOpenInvoice(false)}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'auto'
+                }}
+            >
+                <Box sx={{ outline: 'none' }}>
+                    {selectedOrder && (
+                        <Invoice 
+                            order={selectedOrder} 
+                            onClose={() => setOpenInvoice(false)} 
+                        />
+                    )}
+                </Box>
+            </Modal>
         </Box>
     );
 };
