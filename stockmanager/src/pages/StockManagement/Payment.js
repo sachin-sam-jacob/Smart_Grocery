@@ -18,7 +18,8 @@ import { fetchDataFromApi, postData } from '../../utils/api';
 
 const Payment = () => {
     const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loadingOrders, setLoadingOrders] = useState({}); // Track loading state per order
+    const [loadingBulkPayment, setLoadingBulkPayment] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
 
     const fetchOrders = async () => {
@@ -32,9 +33,99 @@ const Payment = () => {
         }
     };
 
+    const handleBulkPayment = async () => {
+        try {
+            setLoadingBulkPayment(true);
+            const pendingOrders = orders.filter(order => 
+                order.status === 'delivered' && order.paymentStatus === 'pending'
+            );
+
+            if (pendingOrders.length === 0) {
+                enqueueSnackbar('No pending payments found', { variant: 'warning' });
+                return;
+            }
+
+            const orderIds = pendingOrders.map(order => order._id);
+            const totalAmount = pendingOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+            const response = await postData('/api/stock/orders/bulk-payment', {
+                orderIds
+            });
+
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to create bulk payment order');
+            }
+
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+                amount: Math.round(totalAmount * 100),
+                currency: 'INR',
+                name: 'Smart Grocery',
+                description: `Bulk Payment for ${pendingOrders.length} Orders`,
+                order_id: response.orderId,
+                handler: async function (razorpayResponse) {
+                    try {
+                        console.log('Bulk payment successful, verifying...', razorpayResponse);
+                        
+                        const verificationData = {
+                            orderId: razorpayResponse.razorpay_order_id,
+                            paymentId: razorpayResponse.razorpay_payment_id,
+                            signature: razorpayResponse.razorpay_signature,
+                            orderIds
+                        };
+
+                        console.log('Sending bulk verification request:', verificationData);
+
+                        const result = await postData(
+                            '/api/stock/orders/verify-bulk-payment',
+                            verificationData
+                        );
+                        
+                        if (result.success) {
+                            enqueueSnackbar('Bulk payment successful', { variant: 'success' });
+                            await fetchOrders();
+                        } else {
+                            throw new Error(result.error || 'Bulk payment verification failed');
+                        }
+                    } catch (error) {
+                        console.error('Bulk payment verification error:', error);
+                        enqueueSnackbar(error.message || 'Bulk payment verification failed', { variant: 'error' });
+                    } finally {
+                        setLoadingBulkPayment(false);
+                    }
+                },
+                prefill: {
+                    name: 'Smart Grocery Admin',
+                    email: 'admin@smartgrocery.com'
+                },
+                theme: {
+                    color: '#3f51b5'
+                },
+                modal: {
+                    ondismiss: function() {
+                        setLoadingBulkPayment(false);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                console.error('Bulk payment failed:', response.error);
+                enqueueSnackbar('Bulk payment failed: ' + response.error.description, { variant: 'error' });
+                setLoadingBulkPayment(false);
+            });
+            
+            rzp.open();
+        } catch (error) {
+            console.error('Bulk payment initiation error:', error);
+            enqueueSnackbar(error.message || 'Error initiating bulk payment', { variant: 'error' });
+            setLoadingBulkPayment(false);
+        }
+    };
+
     const handlePayment = async (order) => {
         try {
-            setLoading(true);
+            setLoadingOrders(prev => ({ ...prev, [order._id]: true }));
             const response = await postData(`/api/stock/orders/${order._id}/create-payment`, {
                 amount: order.totalAmount
             });
@@ -77,7 +168,7 @@ const Payment = () => {
                         console.error('Payment verification error:', error);
                         enqueueSnackbar(error.message || 'Payment verification failed', { variant: 'error' });
                     } finally {
-                        setLoading(false);
+                        setLoadingOrders(prev => ({ ...prev, [order._id]: false }));
                     }
                 },
                 prefill: {
@@ -89,7 +180,7 @@ const Payment = () => {
                 },
                 modal: {
                     ondismiss: function() {
-                        setLoading(false);
+                        setLoadingOrders(prev => ({ ...prev, [order._id]: false }));
                     }
                 }
             };
@@ -98,14 +189,14 @@ const Payment = () => {
             rzp.on('payment.failed', function (response) {
                 console.error('Payment failed:', response.error);
                 enqueueSnackbar('Payment failed: ' + response.error.description, { variant: 'error' });
-                setLoading(false);
+                setLoadingOrders(prev => ({ ...prev, [order._id]: false }));
             });
             
             rzp.open();
         } catch (error) {
             console.error('Payment initiation error:', error);
             enqueueSnackbar(error.message || 'Error initiating payment', { variant: 'error' });
-            setLoading(false);
+            setLoadingOrders(prev => ({ ...prev, [order._id]: false }));
         }
     };
 
@@ -113,9 +204,26 @@ const Payment = () => {
         fetchOrders();
     }, []);
 
+    const pendingPaymentsCount = orders.filter(
+        order => order.status === 'delivered' && order.paymentStatus === 'pending'
+    ).length;
+
     return (
-        <Box p={3}>
-            <Typography variant="h5" mb={3}>Payment Management</Typography>
+        <Box p={3} sx={{ paddingTop: '100px' }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h5">Payment Management</Typography>
+                {pendingPaymentsCount > 0 && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleBulkPayment}
+                        disabled={loadingBulkPayment}
+                        startIcon={loadingBulkPayment ? <CircularProgress size={20} color="inherit" /> : null}
+                    >
+                        {loadingBulkPayment ? 'Processing...' : `Pay All (${pendingPaymentsCount})`}
+                    </Button>
+                )}
+            </Box>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -146,9 +254,9 @@ const Payment = () => {
                                         <Button
                                             variant="contained"
                                             onClick={() => handlePayment(order)}
-                                            disabled={loading}
+                                            disabled={loadingOrders[order._id] || loadingBulkPayment}
                                         >
-                                            {loading ? <CircularProgress size={24} /> : 'Pay Now'}
+                                            {loadingOrders[order._id] ? <CircularProgress size={24} /> : 'Pay Now'}
                                         </Button>
                                     )}
                                 </TableCell>

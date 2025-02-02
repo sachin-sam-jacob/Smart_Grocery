@@ -822,4 +822,146 @@ router.get('/orders/:id', async (req, res) => {
     }
 });
 
+// Add this new route for bulk payment creation
+router.post('/orders/bulk-payment', async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+        
+        // Validate input
+        if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid order IDs provided'
+            });
+        }
+
+        // Fetch all orders
+        const orders = await StockOrder.find({
+            _id: { $in: orderIds },
+            status: 'delivered',
+            paymentStatus: 'pending'
+        }).populate('supplierId', 'name email');
+
+        if (!orders || orders.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No valid pending orders found'
+            });
+        }
+
+        // Calculate total amount
+        const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+        // Create Razorpay order for total amount
+        const options = {
+            amount: Math.round(totalAmount * 100), // Convert to paise
+            currency: 'INR',
+            receipt: `BULK-${Date.now()}`,
+            payment_capture: 1,
+            notes: {
+                orderIds: orderIds.join(',')
+            }
+        };
+
+        console.log('Creating bulk Razorpay order with options:', options);
+
+        const razorpayOrder = await razorpay.orders.create(options);
+        console.log('Bulk Razorpay order created:', razorpayOrder);
+
+        res.json({
+            success: true,
+            orderId: razorpayOrder.id,
+            amount: totalAmount,
+            currency: 'INR',
+            orderCount: orders.length
+        });
+    } catch (error) {
+        console.error('Error creating bulk Razorpay order:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Add this new route for bulk payment verification
+router.post('/orders/verify-bulk-payment', async (req, res) => {
+    try {
+        const { paymentId, signature, orderId, orderIds } = req.body;
+        console.log('Bulk payment verification request received:', req.body);
+
+        try {
+            // Get payment details from Razorpay
+            const payment = await razorpay.payments.fetch(paymentId);
+            console.log('Razorpay payment details:', payment);
+
+            // Generate signature
+            const secret = process.env.RAZORPAY_KEY_SECRET;
+            const generatedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(`${orderId}|${paymentId}`)
+                .digest('hex');
+
+            console.log('Generated signature:', generatedSignature);
+            console.log('Received signature:', signature);
+
+            // Verify signature
+            const isValid = generatedSignature === signature;
+            console.log('Signature verification:', isValid);
+
+            if (isValid && payment.status === 'captured') {
+                // Update all orders with payment details
+                const updatePromises = orderIds.map(orderId =>
+                    StockOrder.findByIdAndUpdate(
+                        orderId,
+                        {
+                            paymentStatus: 'completed',
+                            paymentMethod: 'razorpay',
+                            paymentDate: new Date(),
+                            paymentId: paymentId,
+                            razorpayOrderId: orderId,
+                            invoiceNumber: `INV-${Date.now()}-${orderId.slice(-4)}`
+                        },
+                        { new: true }
+                    )
+                );
+
+                const updatedOrders = await Promise.all(updatePromises);
+
+                if (updatedOrders.some(order => !order)) {
+                    throw new Error('Failed to update some order statuses');
+                }
+
+                console.log('All orders updated successfully');
+
+                return res.json({
+                    success: true,
+                    message: 'Bulk payment verified successfully',
+                    orders: updatedOrders
+                });
+            } else {
+                console.log('Bulk payment verification failed');
+                return res.status(400).json({
+                    success: false,
+                    error: !isValid ? 'Invalid signature' : 'Payment not captured'
+                });
+            }
+        } catch (razorpayError) {
+            console.error('Razorpay API error:', razorpayError);
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to verify payment with Razorpay',
+                details: razorpayError.message
+            });
+        }
+    } catch (error) {
+        console.error('Server error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+});
+
 module.exports = router; 
