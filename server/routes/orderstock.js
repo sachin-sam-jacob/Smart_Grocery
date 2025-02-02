@@ -15,23 +15,46 @@ router.get(`/`, async (req, res) => {
             return res.status(400).json({ success: false, message: "District is required" });
         }
 
-        // Find the district and its pincodes
-        const districtData = await District.findOne({ name: district });
-        
-        if (!districtData) {
-            return res.status(404).json({ success: false, message: "District not found" });
-        }
+        console.log('Fetching orders for district:', district);
 
-        const districtPincodes = districtData.pincodes.map(p => p.code);
+        // Find orders and populate product details including location
+        const ordersList = await Orders.find({
+            status: { $ne: 'cancelled' } // Exclude cancelled orders
+        }).populate({
+            path: 'products.productId',
+            model: 'Product',
+            select: 'productTitle image price countInStock location'
+        }).sort({ date: -1 });
 
-        // Find orders with matching pincodes
-        const ordersList = await Orders.find({ pincode: { $in: districtPincodes } });
+        // Filter orders based on products' location
+        const filteredOrders = ordersList.filter(order => {
+            // Check if any product in the order belongs to the stock manager's district
+            return order.products.some(product => {
+                const productLocation = product.productId?.location;
+                return productLocation === district || productLocation === 'All';
+            });
+        });
 
-        if (!ordersList) {
-            return res.status(500).json({ success: false });
-        }
+        // Transform orders to include only relevant products
+        const transformedOrders = filteredOrders.map(order => {
+            const relevantProducts = order.products.filter(product => {
+                const productLocation = product.productId?.location;
+                return productLocation === district || productLocation === 'All';
+            });
 
-        return res.status(200).json(ordersList);
+            return {
+                ...order.toObject(),
+                products: relevantProducts
+            };
+        });
+
+        console.log(`Found ${transformedOrders.length} orders for district:`, district);
+
+        return res.status(200).json({
+            success: true,
+            data: transformedOrders,
+            count: transformedOrders.length
+        });
 
     } catch (error) {
         console.error("Error fetching orders:", error);
@@ -39,22 +62,54 @@ router.get(`/`, async (req, res) => {
     }
 });
 
-
+// Get single order with location-specific products
 router.get('/:id', async (req, res) => {
     try {
+        const { district } = req.query;
+        
+        if (!district) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "District parameter is required" 
+            });
+        }
+
         const order = await Orders.findById(req.params.id)
             .populate({
                 path: 'products.productId',
-                select: 'productTitle image price' // Specify the fields you want to retrieve
+                model: 'Product',
+                select: 'productTitle image price location'
             });
-            
 
         if (!order) {
-            return res.status(404).json({ message: 'The order with the given ID was not found.' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Order not found' 
+            });
         }
-        return res.status(200).send(order);
+
+        // Filter products based on location
+        const relevantProducts = order.products.filter(product => {
+            const productLocation = product.productId?.location;
+            return productLocation === district || productLocation === 'All';
+        });
+
+        const transformedOrder = {
+            ...order.toObject(),
+            products: relevantProducts
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: transformedOrder
+        });
+
     } catch (error) {
-        return res.status(500).json({ message: 'An error occurred while fetching the order.', error });
+        console.error("Error fetching order:", error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
