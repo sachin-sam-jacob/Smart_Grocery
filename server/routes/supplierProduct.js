@@ -134,4 +134,36 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Add this new route
+router.get('/by-name/:name', async (req, res) => {
+    try {
+        const productName = req.params.name;
+        
+        const product = await SupplierProduct.findOne({
+            name: { $regex: new RegExp(`^${productName}$`, 'i') },
+            status: 'active'
+        });
+
+        if (!product) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Product not found' 
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            price: product.price,
+            data: product
+        });
+
+    } catch (error) {
+        console.error('Error fetching supplier product by name:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
 module.exports = router; 
