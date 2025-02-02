@@ -20,19 +20,104 @@ import {
     CircularProgress,
     Fab,
     Tooltip,
-    MenuItem
+    MenuItem,
+    Snackbar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { MyContext } from '../../MyContext';
-import { fetchDataFromApi, postData, putData, deleteData } from '../../utils/api';
+import { fetchDataFromApi, postData, updateData, deleteData } from '../../utils/api';
+import Swal from 'sweetalert2';
+import { styled } from '@mui/material/styles';
+
+// Custom SweetAlert2 styles
+const sweetAlertStyles = {
+    customClass: {
+        popup: 'custom-swal-popup',
+        title: 'custom-swal-title',
+        htmlContainer: 'custom-swal-html',
+        confirmButton: 'custom-swal-confirm-button',
+        cancelButton: 'custom-swal-cancel-button'
+    },
+    buttonsStyling: false,
+    target: 'body'
+};
+
+// Add styles to document head
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    .custom-swal-popup {
+        font-family: 'Inter', sans-serif !important;
+        padding: 2rem !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .custom-swal-title {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #2c3e50 !important;
+        padding: 1rem 0 !important;
+    }
+
+    .custom-swal-html {
+        font-size: 1rem !important;
+        color: #4a5568 !important;
+        padding: 1rem 0 !important;
+    }
+
+    .custom-swal-confirm-button {
+        background-color: #3085d6 !important;
+        color: white !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        margin: 0.5rem !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .custom-swal-confirm-button:hover {
+        background-color: #2c77c0 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .custom-swal-cancel-button {
+        background-color: #d33 !important;
+        color: white !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        margin: 0.5rem !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .custom-swal-cancel-button:hover {
+        background-color: #bf2e2e !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .swal2-actions {
+        gap: 1rem !important;
+    }
+`;
+document.head.appendChild(styleSheet);
 
 const ProductManagement = () => {
-    const [products, setProducts] = useState([]);
     const [open, setOpen] = useState(false);
     const [editProduct, setEditProduct] = useState(null);
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [progress, setProgress] = useState(0);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+    const [userId, setUserId] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -40,11 +125,10 @@ const ProductManagement = () => {
         quantity: '',
         quantityType: 'piece',
         category: '',
-        minStockAlert: ''
+        minStockAlert: '',
+        alternateNames: [],
+        tags: []
     });
-    const [error, setError] = useState('');
-    const context = useContext(MyContext);
-    const user = JSON.parse(localStorage.getItem('user'));
 
     const quantityTypes = [
         { value: 'kg', label: 'Kilogram (kg)' },
@@ -57,29 +141,54 @@ const ProductManagement = () => {
     ];
 
     const updateProgress = (value) => {
-        if (context && context.setProgress) {
-            context.setProgress(value);
-        }
+        setProgress(value);
     };
+
+    useEffect(() => {
+        // Get userId from token
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const decodedToken = JSON.parse(atob(token.split('.')[1]));
+                setUserId(decodedToken.id);
+            } catch (error) {
+                console.error('Error decoding token:', error);
+                setError('Error getting user information');
+            }
+        }
+    }, []);
 
     const fetchProducts = async () => {
         try {
+            if (!userId) {
+                console.error('Invalid userId:', userId);
+                setError('Invalid user ID');
+                setProducts([]);
+                return;
+            }
+
             setLoading(true);
-            updateProgress(30);
-            const response = await fetchDataFromApi(`/api/supplier-products/supplier/${user.userId}`);
-            setProducts(response);
-            updateProgress(100);
+            const response = await fetchDataFromApi(`/api/supplier-products/supplier/${userId}`);
+            if (response && Array.isArray(response)) {
+                setProducts(response);
+            } else {
+                setProducts([]);
+                console.error('Invalid response format:', response);
+            }
         } catch (error) {
-            setError('Failed to fetch products');
-            updateProgress(100);
+            console.error('Error fetching products:', error);
+            setError(error.response?.data?.error || 'Error fetching products');
+            setProducts([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        if (userId) {
+            fetchProducts();
+        }
+    }, [userId]);
 
     const handleOpen = () => {
         setOpen(true);
@@ -91,7 +200,9 @@ const ProductManagement = () => {
             quantity: '',
             quantityType: 'piece',
             category: '',
-            minStockAlert: ''
+            minStockAlert: '',
+            alternateNames: [],
+            tags: []
         });
     };
 
@@ -102,9 +213,11 @@ const ProductManagement = () => {
             description: product.description,
             price: product.price,
             quantity: product.quantity,
-            quantityType: product.quantityType,
+            quantityType: product.quantityType || 'piece',
             category: product.category,
-            minStockAlert: product.minStockAlert
+            minStockAlert: product.minStockAlert,
+            alternateNames: product.alternateNames || [],
+            tags: product.tags || []
         });
         setOpen(true);
     };
@@ -116,21 +229,83 @@ const ProductManagement = () => {
 
     const handleSubmit = async () => {
         try {
+            if (!userId) {
+                await Swal.fire({
+                    title: 'Error!',
+                    text: 'Invalid user ID',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    background: '#fff',
+                    ...sweetAlertStyles
+                });
+                return;
+            }
+
+            if (!formData.name || !formData.price || !formData.quantity || !formData.quantityType) {
+                await Swal.fire({
+                    title: 'Error!',
+                    text: 'Please fill in all required fields',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    background: '#fff',
+                    ...sweetAlertStyles
+                });
+                return;
+            }
+
             setLoading(true);
             updateProgress(30);
+            
+            const dataToSubmit = {
+                name: formData.name,
+                description: formData.description || '',
+                price: Number(formData.price),
+                quantity: Number(formData.quantity),
+                quantityType: formData.quantityType,
+                category: formData.category || '',
+                minStockAlert: Number(formData.minStockAlert) || 10,
+                alternateNames: formData.alternateNames || [],
+                tags: formData.tags || [],
+                supplierId: userId
+            };
+
+            console.log('Submitting data:', dataToSubmit);
+
             if (editProduct) {
-                await postData(`/api/supplier-products/${editProduct._id}`, formData);
+                await updateData(`/api/supplier-products/${editProduct._id}`, dataToSubmit);
             } else {
-                await postData('/api/supplier-products', {
-                    ...formData,
-                    supplierId: user.userId
-                });
+                await postData('/api/supplier-products', dataToSubmit);
             }
+            
             await fetchProducts();
             handleClose();
+            
+            // Show success message
+            await Swal.fire({
+                title: 'Success!',
+                text: editProduct ? 'Product updated successfully' : 'Product added successfully',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#fff',
+                ...sweetAlertStyles
+            });
+
             updateProgress(100);
         } catch (error) {
-            setError(error.message);
+            console.error('Error submitting product:', error);
+            
+            // Show error message
+            await Swal.fire({
+                title: 'Error!',
+                text: 'Failed to ' + (editProduct ? 'update' : 'add') + ' product: ' + 
+                      (error.response?.data?.error || error.message),
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                background: '#fff',
+                ...sweetAlertStyles
+            });
+            
             updateProgress(100);
         } finally {
             setLoading(false);
@@ -139,14 +314,48 @@ const ProductManagement = () => {
 
     const handleDelete = async (id) => {
         try {
-            setLoading(true);
-            updateProgress(30);
-            await deleteData(`/api/supplier-products/${id}`);
-            await fetchProducts();
-            updateProgress(100);
+            // Show confirmation dialog
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                background: '#fff',
+                ...sweetAlertStyles
+            });
+
+            if (result.isConfirmed) {
+                setLoading(true);
+                await deleteData(`/api/supplier-products/${id}`);
+                await fetchProducts();
+                
+                // Show success message
+                await Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Product has been deleted successfully.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: '#fff',
+                    ...sweetAlertStyles
+                });
+            }
         } catch (error) {
-            setError(error.message);
-            updateProgress(100);
+            console.error('Error deleting product:', error);
+            
+            // Show error message
+            await Swal.fire({
+                title: 'Error!',
+                text: 'Failed to delete product: ' + (error.response?.data?.error || error.message),
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                background: '#fff',
+                ...sweetAlertStyles
+            });
         } finally {
             setLoading(false);
         }
@@ -240,9 +449,7 @@ const ProductManagement = () => {
                                     fontWeight: 600, 
                                     color: '#2c3e50',
                                     fontSize: '0.875rem'
-                                }}>Price per {/* Show the quantity type */}
-                                    {products.map(product => product.quantityType)}
-                                </TableCell>
+                                }}>Price per Unit</TableCell>
                                 <TableCell sx={{ 
                                     fontWeight: 600, 
                                     color: '#2c3e50',
@@ -412,19 +619,30 @@ const ProductManagement = () => {
                             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                             margin="normal"
                             variant="outlined"
+                            required
                         />
                         <TextField
                             select
                             fullWidth
                             label="Quantity Type"
                             value={formData.quantityType}
-                            onChange={(e) => setFormData({ ...formData, quantityType: e.target.value })}
+                            onChange={(e) => {
+                                console.log('Selected quantity type:', e.target.value);
+                                setFormData({ 
+                                    ...formData, 
+                                    quantityType: e.target.value 
+                                });
+                            }}
                             margin="normal"
                             variant="outlined"
                             sx={{ minWidth: '150px' }}
+                            required
                         >
                             {quantityTypes.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
+                                <MenuItem 
+                                    key={option.value} 
+                                    value={option.value}
+                                >
                                     {option.label}
                                 </MenuItem>
                             ))}
@@ -484,6 +702,19 @@ const ProductManagement = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <Snackbar 
+                open={openSnackbar} 
+                autoHideDuration={6000} 
+                onClose={() => setOpenSnackbar(false)}
+            >
+                <Alert 
+                    onClose={() => setOpenSnackbar(false)} 
+                    severity={snackbarSeverity}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
