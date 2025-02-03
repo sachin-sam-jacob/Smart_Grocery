@@ -119,7 +119,7 @@ const OrderHistory = () => {
                             <TableCell sx={tableHeaderCellStyles}>Quantity</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Total Amount</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Location</TableCell>
-                            <TableCell sx={tableHeaderCellStyles}>Delivery Date</TableCell>
+                            {/* <TableCell sx={tableHeaderCellStyles}>Delivery Date</TableCell> */}
                             <TableCell sx={tableHeaderCellStyles}>Payment Status</TableCell>
                             <TableCell sx={tableHeaderCellStyles}>Status</TableCell>
                         </TableRow>
@@ -152,13 +152,13 @@ const OrderHistory = () => {
                                 </TableCell>
                                 <TableCell sx={tableCellStyles}>₹{order.totalAmount?.toFixed(2)}</TableCell>
                                 <TableCell sx={tableCellStyles}>{order.location}</TableCell>
-                                <TableCell sx={tableCellStyles}>
+                                {/* <TableCell sx={tableCellStyles}>
                                     {new Date(order.updatedAt).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric'
                                     })}
-                                </TableCell>
+                                </TableCell> */}
                                 <TableCell sx={tableCellStyles}>
                                     <Chip 
                                         label={order.paymentStatus || 'pending'}

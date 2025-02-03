@@ -42,6 +42,7 @@ const recipeRoutes=require('./routes/recipes.js');
 const stockManagementRoutes = require('./routes/stockManagement');
 const supplierProductRoutes = require('./routes/supplierProduct');
 const aiDescriptionRoutes = require('./routes/aiDescription');
+const chatbotRoutes = require('./routes/chatbot');
 
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
@@ -71,6 +72,7 @@ app.use('/api/recipes',recipeRoutes);
 app.use('/api/stock', stockManagementRoutes);
 app.use('/api/supplier-products', supplierProductRoutes);
 app.use('/api/ai-description', aiDescriptionRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 
 //Database

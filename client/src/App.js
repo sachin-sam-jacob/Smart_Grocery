@@ -31,6 +31,7 @@ import ForgotPassword from "./Components/ForgotPassword/ForgotPassword";
 import VerifyCode from "./Components/ForgotPassword/VerifyCode";
 import ResetPassword from "./Components/ForgotPassword/ResetPassword";
 import axios from "axios";
+import Chatbot from './Components/Chatbot';
 
 export const MyContext = React.createContext();
 
@@ -282,6 +283,7 @@ function App() {
             {isHeaderFooterShow && <Footer />}
 
             {isOpenProductModal && <ProductModal data={productData} />}
+            <Chatbot />
           </>
         )}
       </MyContext.Provider>
