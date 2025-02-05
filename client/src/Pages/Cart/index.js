@@ -5,21 +5,40 @@ import { IoIosClose } from "react-icons/io";
 import Button from '@mui/material/Button';
 import emprtCart from '../../assets/images/emptyCart.png';
 import { MyContext } from "../../App";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { deleteData, editData, fetchDataFromApi } from "../../utils/api";
 import { IoBagCheckOutline } from "react-icons/io5";
 import { FaHome } from "react-icons/fa";
 import swal from 'sweetalert2';
 import RecipeRecommendation from '../../Components/RecipeRecommendation/index';
 
-
 const Cart = () => {
     const [cartData, setCartData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
-
     const context = useContext(MyContext);
     const history = useNavigate();
+
+    // Memoize fetchCartData to prevent unnecessary recreations
+    const fetchCartData = useCallback(async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user?.userId) return;
+            
+            const res = await fetchDataFromApi(`/api/cart?userId=${user.userId}`);
+            if (Array.isArray(res)) {
+                // Ensure quantities are preserved as numbers
+                const cartWithQuantities = res.map(item => ({
+                    ...item,
+                    quantity: parseInt(item.quantity) || 1,
+                    subTotal: parseInt(item.price * (parseInt(item.quantity) || 1))
+                }));
+                setCartData(cartWithQuantities);
+            }
+        } catch (error) {
+            console.error("Error fetching cart:", error);
+        }
+    }, []);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -30,48 +49,73 @@ const Cart = () => {
         } else {
             history("/signIn");
         }
-    }, []);
+    }, [history, fetchCartData]);
 
-    const fetchCartData = () => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        fetchDataFromApi(`/api/cart?userId=${user?.userId}`).then((res) => {
-            setCartData(res);
-        });
-    };
-
-    const handleQuantityChange = (item, newQuantity) => {
+    const handleQuantityChange = async (item, newQuantity) => {
+        if (newQuantity === item.quantity) return; // Prevent unnecessary updates
+        if (newQuantity < 1) return; // Prevent negative quantities
+        
         setIsLoading(true);
-        const user = JSON.parse(localStorage.getItem("user"));
-        const updatedItem = {
-            ...item,
-            quantity: newQuantity,
-            subTotal: parseInt(item.price * newQuantity)
-        };
+        try {
+            const updatedItem = {
+                ...item,
+                quantity: newQuantity,
+                subTotal: parseInt(item.price * newQuantity)
+            };
 
-        editData(`/api/cart/${item._id}`, updatedItem).then(() => {
+            await editData(`/api/cart/${item._id}`, updatedItem);
+            
+            // Update local state immediately
             setCartData(prevCart => 
                 prevCart.map(cartItem => 
                     cartItem._id === item._id ? updatedItem : cartItem
                 )
             );
-            setIsLoading(false);
+            
+            // Update global cart state
             context.getCartData();
-        });
+
+        } catch (error) {
+            console.error("Error updating quantity:", error);
+            swal.fire('Error', 'Failed to update quantity', 'error');
+            // Revert to original quantity on error
+            setCartData(prevCart => [...prevCart]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const removeItem = (id) => {
+    const removeItem = async (id) => {
         setIsLoading(true);
-        deleteData(`/api/cart/${id}`).then((res) => {
-            swal.fire('Success',res.message,'success');
-            fetchCartData();
+        try {
+            const res = await deleteData(`/api/cart/${id}`);
+            if (res.success) {
+                swal.fire('Success', res.message, 'success');
+                setCartData(prev => prev.filter(item => item._id !== id));
+                context.getCartData();
+            }
+        } catch (error) {
+            console.error("Error removing item:", error);
+            swal.fire('Error', 'Failed to remove item', 'error');
+        } finally {
             setIsLoading(false);
-            context.getCartData();
-        });
+        }
     };
 
-    const calculateTotal = () => {
+    const calculateTotal = useCallback(() => {
         return cartData.reduce((total, item) => total + item.subTotal, 0);
-    };
+    }, [cartData]);
+
+    // Prevent re-renders of QuantityBox component
+    const renderQuantityBox = useCallback((item) => (
+        <QuantityBox 
+            quantity={(val) => handleQuantityChange(item, val)} 
+            item={item} 
+            value={item.quantity}
+            key={`${item._id}-${item.quantity}`}
+            initialValue={item.quantity}
+        />
+    ), [handleQuantityChange]);
 
     return (
         <>
@@ -114,11 +158,7 @@ const Cart = () => {
                                                     <td width="15%">Rs {item.price}</td>
                                                     <td width="10%">{item.weight}</td>
                                                     <td width="25%">
-                                                        <QuantityBox 
-                                                            quantity={(val) => handleQuantityChange(item, val)} 
-                                                            item={item} 
-                                                            value={item.quantity} 
-                                                        />
+                                                        {renderQuantityBox(item)}
                                                     </td>
                                                     <td width="15%">Rs. {item.subTotal}</td>
                                                     <td width="10%">

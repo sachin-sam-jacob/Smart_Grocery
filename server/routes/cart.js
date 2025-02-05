@@ -133,33 +133,34 @@ router.get('/:id', async (req, res) => {
 
 
 router.put('/:id', async (req, res) => {
+    try {
+        const cart = await Cart.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: req.body
+            },
+            { new: true }
+        );
 
-    const cartList = await Cart.findByIdAndUpdate(
-        req.params.id,
-        {
-            productTitle: req.body.productTitle,
-            image: req.body.image,
-            rating: req.body.rating,
-            price: req.body.price,
-            quantity: req.body.quantity,
-            subTotal: req.body.subTotal,
-            productId: req.body.productId,
-            userId: req.body.userId,
-            productWeight: req.body.productWeight
-        },
-        { new: true }
-    )
+        if (!cart) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cart item not found!'
+            });
+        }
 
-    if (!cartList) {
-        return res.status(500).json({
-            message: 'Cart item cannot be updated!',
-            success: false
-        })
+        res.status(200).json({
+            success: true,
+            data: cart,
+            message: 'Cart updated successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
-
-    res.send(cartList);
-
-})
+});
 
 router.post('/clear', async (req, res) => {
     try {
