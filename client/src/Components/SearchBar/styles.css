@@ -1,0 +1,117 @@
+.search-container {
+    width: 100%;
+    position: relative;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    transition: border-color 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+    border-color: #4CAF50;
+}
+
+.search-input-wrapper input {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-input-wrapper button {
+    padding: 10px 20px;
+    background: #4CAF50;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-width: auto;
+}
+
+.search-input-wrapper button:hover {
+    background: #45a049;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-top: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+    display: flex;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f5f5f5;
+}
+
+.suggestion-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+.suggestion-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.suggestion-details h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.suggestion-details p {
+    margin: 2px 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.suggestion-details span {
+    font-size: 14px;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+@media (max-width: 991px) {
+    .search-container {
+        margin: 10px 0;
+    }
+    
+    .search-suggestions {
+        position: fixed;
+        top: auto;
+        left: 15px;
+        right: 15px;
+        max-height: 60vh;
+    }
+} 

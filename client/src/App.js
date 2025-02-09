@@ -117,7 +117,7 @@ function App({ navigate }) {
         // Simulate a longer loading time
         setTimeout(() => {
           setIsLoading(false); // Hide preloader after 5 seconds
-        }, 4000);
+        }, 2000);
       }
     };
 
