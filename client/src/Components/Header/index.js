@@ -22,6 +22,8 @@ import { FaUserAlt } from "react-icons/fa";
 import { IoMdMenu } from "react-icons/io";
 import { IoIosSearch } from "react-icons/io";
 import { FaAngleLeft } from "react-icons/fa6";
+import VisualSearch from '../VisualSearch';
+import { IoIosCamera } from "react-icons/io";
 
 const Header = () => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -81,6 +83,11 @@ const Header = () => {
         setIsOpenSearch(false);
     };
 
+    const addToCart = (product) => {
+        // Implementation of addToCart function
+        // You can move this from Cart component or implement as needed
+    };
+
     return (
         <>
             <div className='headerWrapperFixed' ref={headerRef}>
@@ -97,9 +104,17 @@ const Header = () => {
                                     {context.windowWidth > 992 && <CountryDropdown selectedLocation={context.selectedCountry} />}
 
                                     <div className={`headerSearchWrapper ${isOpenSearch === true && 'open'}`}>
-                                        <div className='d-flex align-items-center'>
-                                            <span className="closeSearch mr-3" onClick={() => setIsOpenSearch(false)}><FaAngleLeft /></span>
+                                        <div className='d-flex align-items-center search-container'>
+                                            <span className="closeSearch mr-3" onClick={() => setIsOpenSearch(false)}>
+                                                <FaAngleLeft />
+                                            </span>
                                             <SearchBox closeSearch={closeSearch} />
+                                            <div className="visual-search-wrapper">
+                                                <VisualSearch 
+                                                    addToCart={addToCart}
+                                                    buttonStyle="icon"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

@@ -11,7 +11,6 @@ import { IoBagCheckOutline } from "react-icons/io5";
 import { FaHome } from "react-icons/fa";
 import swal from 'sweetalert2';
 import RecipeRecommendation from '../../Components/RecipeRecommendation/index';
-import VisualSearch from '../../Components/VisualSearch';
 
 const Cart = () => {
     const [cartData, setCartData] = useState([]);
@@ -205,9 +204,10 @@ const Cart = () => {
                                     </div>
                                     <br />
                                     <div className="cart-actions">
-                                        <VisualSearch addToCart={addToCart} />
                                         <Link to="/checkout">
-                                            <Button className='btn-blue bg-red btn-lg btn-big' id="checkout"><IoBagCheckOutline /> &nbsp; Checkout</Button>
+                                            <Button className='btn-blue bg-red btn-lg btn-big' id="checkout">
+                                                <IoBagCheckOutline /> &nbsp; Checkout
+                                            </Button>
                                         </Link>
                                     </div>
                                 </div>

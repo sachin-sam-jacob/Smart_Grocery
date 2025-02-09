@@ -1,0 +1,183 @@
+.visual-search {
+    position: relative;
+    display: inline-block;
+}
+
+.visual-search-icon-btn {
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    background: linear-gradient(135deg, #00C6FF, #0072FF) !important;
+    color: white !important;
+    margin-left: 12px !important;
+    border: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(0,114,255,0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.visual-search-icon-btn:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: radial-gradient(circle at top right, rgba(255,255,255,0.3) 0%, transparent 70%) !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.visual-search-icon-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 16px rgba(0,114,255,0.4) !important;
+}
+
+.visual-search-icon-btn:active {
+    transform: translateY(1px) !important;
+}
+
+.visual-search-default-btn {
+    height: 48px !important;
+    border-radius: 24px !important;
+    padding: 0 28px !important;
+    background: linear-gradient(135deg, #00C6FF, #0072FF) !important;
+    color: white !important;
+    border: none !important;
+    text-transform: none !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(0,114,255,0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.visual-search-default-btn:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: radial-gradient(circle at top right, rgba(255,255,255,0.3) 0%, transparent 70%) !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.visual-search-default-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 16px rgba(0,114,255,0.4) !important;
+}
+
+.visual-search-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Add these styles to your existing header styles */
+.search-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: white;
+    border-radius: 28px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+}
+
+.search-container:focus-within {
+    box-shadow: 0 4px 12px rgba(0,114,255,0.15);
+}
+
+.headerSearchWrapper .visual-search-wrapper {
+    margin-left: auto;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+/* Icon animations */
+.visual-search-icon-btn svg,
+.visual-search-default-btn svg {
+    font-size: 22px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.visual-search-icon-btn:hover svg,
+.visual-search-default-btn:hover svg {
+    transform: scale(1.15);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.visual-search-icon-btn.loading,
+.visual-search-default-btn.loading {
+    animation: pulse 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tooltip customization */
+.MuiTooltip-tooltip {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+/* Update ProductCard hover effect */
+.product-card {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.product-info {
+    padding: 16px;
+    background: white;
+}
+
+.product-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a202c;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.product-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0072FF;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+} 
