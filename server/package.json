@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "dev": "nodemon index.js",
+    "start-python": "cd python_server && .\\venv\\Scripts\\python app.py",
+    "dev": "concurrently \"npm start\" \"npm run start-python\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
@@ -29,10 +30,13 @@
     "node-fetch": "^2.7.0",
     "nodemailer": "^6.9.15",
     "nodemon": "^3.1.7",
-    "openai": "^4.78.1",
+    "openai": "^4.0.0",
     "p-limit": "^3.1.0",
     "razorpay": "^2.9.5",
     "slugify": "^1.6.6",
-    "stripe": "^15.6.0"
+    "stripe": "^15.6.0",
+    "axios": "^1.6.2",
+    "form-data": "^4.0.0",
+    "concurrently": "^8.2.2"
   }
 }

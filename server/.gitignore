@@ -11,4 +11,7 @@
 
 .env
 
+.venv
+venv/
+server/python_server/venv/
 

@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./responsive.css";
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import Home from "./Pages/Home";
 import Listing from "./Pages/Listing";
 import ProductDetails from "./Pages/ProductDetails";
@@ -32,10 +32,18 @@ import VerifyCode from "./Components/ForgotPassword/VerifyCode";
 import ResetPassword from "./Components/ForgotPassword/ResetPassword";
 import axios from "axios";
 import Chatbot from './Components/Chatbot';
+import VoiceAssistant from './Components/VoiceAssistant';
 
 export const MyContext = React.createContext();
 
-function App() {
+// Create a wrapper component to access useNavigate
+const AppWrapper = () => {
+  const navigate = useNavigate();
+  
+  return <App navigate={navigate} />;
+};
+
+function App({ navigate }) {
   const [countryList, setCountryList] = useState([]);
   const [selectedCountry, setselectedCountry] = useState("");
   const [isOpenProductModal, setisOpenProductModal] = useState(false);
@@ -232,63 +240,75 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <MyContext.Provider value={contextValue}>
-        {isLoading && <Preloader />}
-        {!isLoading && (
-          <>
-            <Snackbar
-              open={alertBox.open}
-              autoHideDuration={6000}
+    <MyContext.Provider value={contextValue}>
+      {isLoading && <Preloader />}
+      {!isLoading && (
+        <div className="app-container">
+          <Snackbar
+            open={alertBox.open}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            className="snackbar"
+          >
+            <Alert
               onClose={handleClose}
-              className="snackbar"
+              autoHideDuration={6000}
+              severity={alertBox.error === false ? "success" : "error"}
+              variant="filled"
+              sx={{ width: "100%" }}
             >
-              <Alert
-                onClose={handleClose}
-                autoHideDuration={6000}
-                severity={alertBox.error === false ? "success" : "error"}
-                variant="filled"
-                sx={{ width: "100%" }}
-              >
-                {alertBox.msg}
-              </Alert>
-            </Snackbar>
+              {alertBox.msg}
+            </Alert>
+          </Snackbar>
 
-            {isHeaderFooterShow && <Header />}
+          {isHeaderFooterShow && <Header />}
 
-            <Routes>
-              <Route path="/" exact={true} element={<Home />} />
-              <Route path="/products/category/:id" exact={true} element={<Listing />} />
-              <Route path="/products/subCat/:id" exact={true} element={<Listing />} />
-              <Route exact={true} path="/product/:id" element={<ProductDetails />} />
-              <Route exact={true} path="/cart" element={<Cart />} />
-              <Route exact={true} path="/signIn" element={<SignIn />} />
-              <Route exact={true} path="/forgotpassword" element={<ForgotPassword />} />
-              <Route exact={true} path="/verify-code" element={<VerifyCode />} />
-              <Route exact={true} path="/reset-password" element={<ResetPassword />} />
-              <Route exact={true} path="/signUp" element={<SignUp />} />
-              <Route exact={true} path="/my-list" element={<MyList />} />
-              <Route exact={true} path="/checkout" element={<Checkout />} />
-              <Route exact={true} path="/orders" element={<Orders />} />
-              <Route exact={true} path="/my-account" element={<MyAccount />} />
-              <Route exact={true} path="/search" element={<SearchPage />} />
-              <Route path="/orders/invoice/:id" element={<Invoice />} />
-              <Route path="/cancel-order/:id" element={<CancelOrder />} />
-              <Route path="/add-review/:productId" element={<AddReview />} />
-              <Route path="/stockmanager-dashboard" element={<StockManagerDashboard />} />
-              <Route path="/stockmanager" element={<StockManagerDashboard />} />
-              <Route path="/stockmanager/products" element={<Products />} />
-            </Routes>
+          <Routes>
+            <Route path="/" exact={true} element={<Home />} />
+            <Route path="/products/category/:id" exact={true} element={<Listing />} />
+            <Route path="/products/subCat/:id" exact={true} element={<Listing />} />
+            <Route exact={true} path="/product/:id" element={<ProductDetails />} />
+            <Route exact={true} path="/cart" element={<Cart />} />
+            <Route exact={true} path="/signIn" element={<SignIn />} />
+            <Route exact={true} path="/forgotpassword" element={<ForgotPassword />} />
+            <Route exact={true} path="/verify-code" element={<VerifyCode />} />
+            <Route exact={true} path="/reset-password" element={<ResetPassword />} />
+            <Route exact={true} path="/signUp" element={<SignUp />} />
+            <Route exact={true} path="/my-list" element={<MyList />} />
+            <Route exact={true} path="/checkout" element={<Checkout />} />
+            <Route exact={true} path="/orders" element={<Orders />} />
+            <Route exact={true} path="/my-account" element={<MyAccount />} />
+            <Route exact={true} path="/search" element={<SearchPage />} />
+            <Route path="/orders/invoice/:id" element={<Invoice />} />
+            <Route path="/cancel-order/:id" element={<CancelOrder />} />
+            <Route path="/add-review/:productId" element={<AddReview />} />
+            <Route path="/stockmanager-dashboard" element={<StockManagerDashboard />} />
+            <Route path="/stockmanager" element={<StockManagerDashboard />} />
+            <Route path="/stockmanager/products" element={<Products />} />
+          </Routes>
 
-            {isHeaderFooterShow && <Footer />}
+          {isHeaderFooterShow && <Footer />}
 
-            {isOpenProductModal && <ProductModal data={productData} />}
+          {isOpenProductModal && <ProductModal data={productData} />}
+          
+          <div className="assistants-container">
+            <VoiceAssistant 
+              addToCart={addToCart} 
+              navigate={navigate}
+            />
             <Chatbot />
-          </>
-        )}
-      </MyContext.Provider>
-    </BrowserRouter>
+          </div>
+        </div>
+      )}
+    </MyContext.Provider>
   );
 }
 
-export default App;
+// Export the wrapper instead of App directly
+export default function () {
+  return (
+    <BrowserRouter>
+      <AppWrapper />
+    </BrowserRouter>
+  );
+}

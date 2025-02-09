@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const axios = require('axios');
 
 
 app.use(cors());
@@ -43,6 +44,8 @@ const stockManagementRoutes = require('./routes/stockManagement');
 const supplierProductRoutes = require('./routes/supplierProduct');
 const aiDescriptionRoutes = require('./routes/aiDescription');
 const chatbotRoutes = require('./routes/chatbot');
+const voiceAssistantRoutes = require('./routes/voiceAssistant');
+const visualSearchRoutes = require('./routes/visualSearch');
 
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
@@ -73,64 +76,45 @@ app.use('/api/stock', stockManagementRoutes);
 app.use('/api/supplier-products', supplierProductRoutes);
 app.use('/api/ai-description', aiDescriptionRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/voice-assistant', voiceAssistantRoutes);
+app.use('/api/visual-search', visualSearchRoutes);
 
 
-//Database
-mongoose.connect(process.env.CONNECTION_STRING, {
+// Add this before your routes
+async function checkPythonServer() {
+  try {
+    const response = await axios.get('http://localhost:5000/health');
+    console.log('Python server status:', response.data);
+    return true;
+  } catch (error) {
+    console.error('Python server not running:', error.message);
+    return false;
+  }
+}
+
+// Add this after your routes
+const startServer = async () => {
+  const pythonServerRunning = await checkPythonServer();
+  if (!pythonServerRunning) {
+    console.error('WARNING: Python server is not running. Visual search will not work.');
+  }
+  
+  mongoose.connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true
-})
-    .then(() => {
-        console.log('Database Connection is ready...');
-        //Server
-        app.listen(process.env.PORT, () => {
-            console.log(`server is running http://localhost:${process.env.PORT}`);
-        })
-    })
-    .catch((err) => {
-        console.log(err);
-    })
-     // Make sure you have dotenv to use environment variables
+  })
+  .then(() => {
+    console.log('Database Connection is ready...');
+    app.listen(process.env.PORT, () => {
+      console.log(`server is running http://localhost:${process.env.PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+};
 
-    // app.post('/forgot', async (req, res) => {
-    //     const { email } = req.body;
-    //     console.log(email);
-    //     try {
-    //         const user = await User.findOne({ email: email });
-    //         if (!user) {
-    //             return res.status(400).json({ message: 'Email ID not registered.' });
-    //         }
-    //         else{
-    //         const code = Math.floor(1000 + Math.random() * 9000).toString();
-    //         user.resetCode = code;
-    //         user.resetCodeExpiration = Date.now() + 3600000; // Code valid for 1 hour
-    //         await user.save();
-    
-    //         // Setup email transport
-    //         const transporter = nodemailer.createTransport({
-    //             service: 'gmail',
-    //             auth: {
-    //                 user: process.env.EMAIL_USER, // Use environment variables
-    //                 pass: process.env.EMAIL_PASS, // Use environment variables
-    //             },
-    //         });
-    
-    //         // Send email
-    //         await transporter.sendMail({
-    //             from: process.env.EMAIL_USER,
-    //             to: email,
-    //             subject: 'Password Reset Code',
-    //             text: `Your password reset code is: ${code}`,
-    //         });
-    
-    //         res.status(200).json({ message: 'Reset code sent to your email.' });
-    //     }
-    //     } catch (error) {
-    //         console.error(error);
-    //         res.status(500).json({ message: 'An error occurred. Please try again.' });
-    //     }
-    // });
-    
+startServer();
     
     
     

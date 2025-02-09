@@ -32,33 +32,30 @@ export const fetchDataApi = async (url) => {
 }
 
 
-export const postData = async (url, formData) => {
+export const postData = async (url, data, isFormData = false) => {
     try {
-        console.log(formData);
-        const response = await fetch(process.env.REACT_APP_API_URL + url, {
+        const headers = {
+            ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        };
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}${url}`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`, // Include your API key in the Authorization header
-                'Content-Type': 'application/json', // Adjust the content type as needed
-              },
-            body: JSON.stringify(formData)
+            headers: headers,
+            body: isFormData ? data : JSON.stringify(data)
         });
 
-
-        if (response.ok) {
-            const data = await response.json();
-            //console.log(data)
-            return data;
-        } else {
-            const errorData = await response.json();
-            return errorData;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        const result = await response.json();
+        return result;
     } catch (error) {
-        console.log('Error:', error);
+        console.error('API Error:', error);
+        throw error;
     }
-
-}
+};
 
 
 export const editData = async (url, updatedData ) => {

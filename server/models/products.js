@@ -21,7 +21,7 @@ const productSchema = mongoose.Schema({
     },
     price: {
         type: Number,
-        default: 0
+        required: true
     },
     oldPrice: {
         type: Number,
@@ -44,8 +44,7 @@ const productSchema = mongoose.Schema({
         default:''
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
+        type: String,
         required: true
     },
     countInStock: {
