@@ -25,7 +25,9 @@ const productSchema = mongoose.Schema({
     },
     oldPrice: {
         type: Number,
-        default: 0
+        default: function() {
+            return this.price;
+        }
     },
     catName:{
         type:String,
@@ -62,7 +64,7 @@ const productSchema = mongoose.Schema({
     },
     discount: {
         type: Number,
-        required: true,
+        default: 0
     },
     productRam: [
         {
@@ -91,8 +93,22 @@ const productSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    basePrice: {
+        type: Number,
+        default: function() {
+            return this.price;
+        }
+    },
 })
 
+productSchema.pre('save', function(next) {
+    if (this.isNew) {
+        this.basePrice = this.price;
+        this.oldPrice = this.price;
+        this.discount = 0;
+    }
+    next();
+});
 
 productSchema.virtual('id').get(function () {
     return this._id.toHexString();

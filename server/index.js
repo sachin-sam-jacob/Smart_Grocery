@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const axios = require('axios');
+const schedulePriceUpdates = require('./utils/priceUpdateScheduler');
 
 
 app.use(cors());
@@ -46,6 +47,7 @@ const aiDescriptionRoutes = require('./routes/aiDescription');
 const chatbotRoutes = require('./routes/chatbot');
 const voiceAssistantRoutes = require('./routes/voiceAssistant');
 const visualSearchRoutes = require('./routes/visualSearch');
+const dynamicPricingRoutes = require('./routes/dynamicPricing');
 
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
@@ -78,6 +80,7 @@ app.use('/api/ai-description', aiDescriptionRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/voice-assistant', voiceAssistantRoutes);
 app.use('/api/visual-search', visualSearchRoutes);
+app.use('/api/dynamic-pricing', dynamicPricingRoutes);
 
 
 // Add this before your routes
@@ -113,6 +116,9 @@ const startServer = async () => {
     console.log(err);
   });
 };
+
+// Start the price update scheduler
+schedulePriceUpdates();
 
 startServer();
     
