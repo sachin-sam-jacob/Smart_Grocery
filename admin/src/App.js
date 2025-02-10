@@ -31,6 +31,7 @@ import LoadingBar from 'react-top-loading-bar'
 import { fetchDataFromApi } from './utils/api';
 import UserDetails from './pages/User/UserDetails';
 import axios from 'axios';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import AddStockManager from './pages/StockManager/AddStockManager';
 import ApproveStockManagers from './pages/StockManager/ApproveStockManagers';
 import ListStockManagers from './pages/StockManager/ListStockManagers';
