@@ -8,6 +8,8 @@ import GoogleImg from "../../assets/images/googleImg.png";
 import CircularProgress from "@mui/material/CircularProgress";
 import { postData } from "../../utils/api";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import Swal from 'sweetalert2';
+import 'animate.css';
 import { firebaseApp } from "../../firebase"; // Ensure firebaseApp is correctly initialized
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
@@ -44,10 +46,11 @@ const SignIn = () => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
 
-    context.setAlertBox({
-      open: true,
-      error: false,
-      msg: "Login successful!",
+    Swal.fire({
+      title: 'Login successful!',
+      icon: 'success',
+      timer: 1500,
+      timerProgressBar: true,
     });
 
     context.setIsLogin(true);
@@ -69,50 +72,108 @@ const SignIn = () => {
     e.preventDefault();
 
     if (formfields.email === "") {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: "Email cannot be blank!",
-      });
-      return false;
+        Swal.fire({
+            title: '<span style="color: #dc3545">Email Required</span>',
+            html: '<div class="custom-error-message">Please enter your email address</div>',
+            icon: 'warning',
+            background: '#fff',
+            customClass: {
+                popup: 'animated fadeInDown error-popup',
+                title: 'error-title',
+                htmlContainer: 'error-container',
+            },
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545',
+            padding: '2em',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+        return false;
     }
 
     if (formfields.password === "") {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: "Password cannot be blank!",
-      });
-      return false;
+        Swal.fire({
+            title: '<span style="color: #dc3545">Password Required</span>',
+            html: '<div class="custom-error-message">Please enter your password</div>',
+            icon: 'warning',
+            background: '#fff',
+            customClass: {
+                popup: 'animated fadeInDown error-popup',
+                title: 'error-title',
+                htmlContainer: 'error-container',
+            },
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545',
+            padding: '2em',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+        return false;
     }
 
     setIsLoading(true);
-    postData("/api/user/signin", formfields).then((res) => {
-      try {
-        if (res.error !== true) {
-          const user = {
-            name: res.user?.name,
-            email: res.user?.email,
-            userId: res.user?.id,
-            isStockManager: res.user?.isStockManager,
-            location: res.user?.location,
-          };
+    postData("/api/user/signin", formfields)
+        .then((res) => {
+            if (!res.error) {
+                const user = {
+                    name: res.user?.name,
+                    email: res.user?.email,
+                    userId: res.user?.id,
+                    isStockManager: res.user?.isStockManager,
+                    location: res.user?.location,
+                };
+                handleSuccessfulLogin(user, res.token, res.user.isAdmin, res.user.isStockManager);
+            } else {
+                throw new Error(res.msg);
+            }
+        })
+        .catch((error) => {
+            let errorMessage = error.message;
+            // Handle specific error responses
+            if (error.message.includes('HTTP error! status: 400')) {
+                errorMessage = 'Incorrect password. Please try again.';
+            } else if (error.message.includes('HTTP error! status: 404')) {
+                errorMessage = 'No account found with this email address.';
+            } else if (error.message.includes('HTTP error! status: 403')) {
+                errorMessage = 'Your account has been blocked. Please contact support.';
+            }
 
-          handleSuccessfulLogin(user, res.token, res.user.isAdmin, res.user.isStockManager);
-        } else {
-          // Handle error messages
-          context.setAlertBox({
-            open: true,
-            error: true,
-            msg: res.msg,
-          });
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.log(error);
-        setIsLoading(false);
-      }
-    });
+            Swal.fire({
+                title: '<span style="color: #dc3545">Error</span>',
+                html: `<div class="custom-error-message">${errorMessage}</div>`,
+                icon: 'error',
+                background: '#fff',
+                customClass: {
+                    popup: 'animated fadeInDown error-popup',
+                    title: 'error-title',
+                    htmlContainer: 'error-container',
+                },
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc3545',
+                padding: '2em',
+                borderRadius: '15px',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
+            setIsLoading(false);
+        });
   };
     
   const signInWithGoogle = () => {
@@ -141,10 +202,12 @@ const SignIn = () => {
 
               handleSuccessfulLogin(user, res.token, res.user.isAdmin, res.user.isStockManager);
             } else {
-              context.setAlertBox({
-                open: true,
-                error: true,
-                msg: res.msg,
+              Swal.fire({
+                title: 'Error!',
+                text: res.msg,
+                icon: 'error',
+                timer: 1500,
+                timerProgressBar: true,
               });
               setIsLoading(false);
             }
@@ -154,14 +217,15 @@ const SignIn = () => {
           }
         });
 
-        context.setAlertBox({
-          open: true,
-          error: false,
-          msg: "User authentication successful!",
+        Swal.fire({
+          title: 'Login successful!',
+          icon: 'success',
+          timer: 1500,
+          timerProgressBar: true,
         });
       })
       .catch((error) => {
-        context.setAlertBox({
+        Swal.fire({
           open: true,
           error: true,
           msg: error.message,
@@ -209,7 +273,7 @@ const SignIn = () => {
                 id="emailid"
                 label="Email"
                 type="email"
-                required
+                
                 variant="standard"
                 className="w-100"
                 name="email"
@@ -221,7 +285,7 @@ const SignIn = () => {
                 id="passwords"
                 label="Password"
                 type="password"
-                required
+                
                 variant="standard"
                 className="w-100"
                 name="password"

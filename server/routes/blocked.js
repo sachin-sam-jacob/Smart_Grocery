@@ -37,13 +37,13 @@ router.put('/unblock/:id', async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL, // Your email
-                pass: process.env.PASSWORD, // Your email password
+                user: process.env.EMAIL_USER, // Your email
+                pass: process.env.EMAIL_PASSWORD, // Your email password
             },
         });
 
         const mailOptions = {
-            from: process.env.EMAIL,
+            from: process.env.EMAIL_USER,
             to: updatedUser.email, // Send email to the user's email address
             subject: 'Account Unblocked Notification - Smart Grocery',
             text: `Dear ${updatedUser.name},

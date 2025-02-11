@@ -109,28 +109,52 @@ router.post(`/signin`, async (req, res) => {
     try {
         const existingUser = await User.findOne({ email: email });
         if (!existingUser) {
-            return res.status(404).json({ error: true, msg: "User not found!" });
+            return res.status(404).json({ 
+                error: true, 
+                msg: "No account found with this email address",
+                details: "Please check your email or create a new account"
+            });
         }
 
         if (existingUser.isBlocked) {
-            return res.status(403).json({ error: true, msg: "User is blocked by the admin due to unauthorized activities." });
+            return res.status(403).json({ 
+                error: true, 
+                msg: "Account Blocked",
+                details: "Your account has been blocked due to unauthorized activities. Please contact support."
+            });
         }
 
         const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
         if (!isPasswordCorrect) {
-            return res.status(400).json({ error: true, msg: "Incorrect password" });
+            return res.status(400).json({ 
+                error: true, 
+                msg: "Incorrect Password",
+                details: "The password you entered is incorrect. Please try again."
+            });
         }
 
-        const token = jwt.sign({ email: existingUser.email, id: existingUser._id, location: existingUser.location }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        const token = jwt.sign(
+            { 
+                email: existingUser.email, 
+                id: existingUser._id, 
+                location: existingUser.location 
+            }, 
+            process.env.JSON_WEB_TOKEN_SECRET_KEY
+        );
         
         return res.status(200).send({
             user: existingUser,
             token: token,
-            msg: "User Login Successfully!"
+            msg: "Login Successful",
+            details: "Welcome back!"
         });
 
     } catch (error) {
-        res.status(500).json({ error: true, msg: "Something went wrong" });
+        res.status(500).json({ 
+            error: true, 
+            msg: "Server Error",
+            details: "Something went wrong. Please try again later."
+        });
     }
 });
 

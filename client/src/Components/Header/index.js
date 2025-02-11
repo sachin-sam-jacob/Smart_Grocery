@@ -10,6 +10,8 @@ import Navigation from './Navigation';
 import { useContext } from 'react';
 import { MyContext } from '../../App';
 import { districtsInKerala } from '../../data/districts'; // Import the districts data
+import Swal from 'sweetalert2';
+import 'animate.css';
 
 import Avatar from '@mui/material/Avatar';
 import Menu from '@mui/material/Menu';
@@ -44,13 +46,92 @@ const Header = () => {
     };
 
     const logout = () => {
-        setAnchorEl(null);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        localStorage.removeItem("location");
-        context.setIsLogin(false);
-        history("/signIn");
-        window.location.reload();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, logout',
+            background: '#fff',
+            customClass: {
+                popup: 'animated fadeInDown',
+                title: 'swal2-title',
+                confirmButton: 'swal2-confirm',
+                cancelButton: 'swal2-cancel'
+            },
+            padding: '2em',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                try {
+                    // First close the menu
+                    setAnchorEl(null);
+                    
+                    // Clear all local storage items
+                    localStorage.clear();
+                    
+                    // Update context
+                    context.setIsLogin(false);
+                    context.setCartData([]);  // Clear cart data if you have it in context
+                    
+                    // Show success message
+                    Swal.fire({
+                        title: '<span style="color: #28a745">Successfully Logged Out!</span>',
+                        html: '<span style="font-size: 1.1em">Thank you for using our service</span>',
+                        icon: 'success',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        background: '#fff',
+                        customClass: {
+                            popup: 'animated fadeInDown',
+                            title: 'swal2-title',
+                        },
+                        padding: '2em',
+                        borderRadius: '15px',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        }
+                    }).then(() => {
+                        // Redirect after the success message is shown
+                        window.location.href = '/signIn';
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        title: '<span style="color: #dc3545">Oops!</span>',
+                        html: '<span style="font-size: 1.1em">Something went wrong while logging out</span>',
+                        icon: 'error',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        background: '#fff',
+                        customClass: {
+                            popup: 'animated fadeInDown',
+                            title: 'swal2-title',
+                        },
+                        padding: '2em',
+                        borderRadius: '15px',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        }
+                    });
+                }
+            }
+        });
     };
 
     useEffect(() => {

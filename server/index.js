@@ -69,7 +69,7 @@ app.use('/api/forgotpassword', forgotpass);
 app.use(`/api/listusers`,listusers);
 app.use(`/api/blocked`, blockedUsers);
 app.use(`/api/orders1`, orders1);
-app.use(`/api/stockmanager`,StockManager);
+app.use(`/api/stockManagers`,StockManager);
 app.use(`/api/pincodes`,Pincode);
 app.use(`/api/product`,Productsstock);
 app.use(`/api/order`,OrderStock);
