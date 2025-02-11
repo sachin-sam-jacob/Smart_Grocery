@@ -77,7 +77,7 @@ const ResetPassword = () => {
                     Reset Password
                 </Button>
                 <Button
-                    onClick={() => navigate('/')}
+                    onClick={() => window.location.href='/signin'}
                     variant="outlined"
                     color="secondary"
                     style={styles.cancelButton}
