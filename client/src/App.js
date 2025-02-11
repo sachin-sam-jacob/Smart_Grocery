@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./responsive.css";
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Home from "./Pages/Home";
 import Listing from "./Pages/Listing";
 import ProductDetails from "./Pages/ProductDetails";
@@ -39,11 +39,12 @@ export const MyContext = React.createContext();
 // Create a wrapper component to access useNavigate
 const AppWrapper = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
-  return <App navigate={navigate} />;
+  return <App navigate={navigate} location={location} />;
 };
 
-function App({ navigate }) {
+function App({ navigate, location }) {
   const [countryList, setCountryList] = useState([]);
   const [selectedCountry, setselectedCountry] = useState("");
   const [isOpenProductModal, setisOpenProductModal] = useState(false);
@@ -239,6 +240,18 @@ function App({ navigate }) {
     setResetFilters,
   };
 
+  // Add this function to check if current page is an auth page
+  const isAuthPage = () => {
+    const authPaths = [
+      '/signIn',
+      '/signUp',
+      '/forgotpassword',
+      '/verify-code',
+      '/reset-password'
+    ];
+    return authPaths.includes(location.pathname);
+  };
+
   return (
     <MyContext.Provider value={contextValue}>
       {isLoading && <Preloader />}
@@ -291,13 +304,16 @@ function App({ navigate }) {
 
           {isOpenProductModal && <ProductModal data={productData} />}
           
-          <div className="assistants-container">
-            <VoiceAssistant 
-              addToCart={addToCart} 
-              navigate={navigate}
-            />
-            <Chatbot />
-          </div>
+          {/* Only show assistants if not on auth pages */}
+          {!isAuthPage() && (
+            <div className="assistants-container">
+              <VoiceAssistant 
+                addToCart={addToCart} 
+                navigate={navigate}
+              />
+              <Chatbot />
+            </div>
+          )}
         </div>
       )}
     </MyContext.Provider>
