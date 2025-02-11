@@ -23,41 +23,86 @@ router.get(`/`, async (req, res) => {
 
 
 router.post('/add', async (req, res) => {
-    console.log("cartitems", req.body);
-    const cartItem = await Cart.find({productId:req.body.productId, userId: req.body.userId});
-    if(cartItem.length===0){
-        let cartList = new Cart({
-            productTitle: req.body.productTitle,
-            image: req.body.image,
-            rating: req.body.rating,
-            price: req.body.price,
-            quantity: req.body.quantity,
-            subTotal: req.body.subTotal,
-            productId: req.body.productId,
-            userId: req.body.userId,
-            countInStock:req.body.countInStock,
-            weight: req.body.productWeight
+    try {
+        const { 
+            userId, 
+            productId, 
+            productTitle,
+            image,
+            rating,
+            price,
+            quantity = 1,
+            countInStock,
+            weight
+        } = req.body;
+        
+        // Check if item already exists in cart
+        const existingCartItem = await Cart.findOne({
+            productId: productId,
+            userId: userId
         });
-    
-    
-    
-        if (!cartList) {
-            res.status(500).json({
-                error: err,
-                success: false
-            })
+
+        if (existingCartItem) {
+            return res.status(400).json({
+                status: false,
+                msg: "This product is already in your cart"
+            });
         }
-    
-    
-        cartList = await cartList.save();
-    
-        res.status(201).json(cartList);
-    }else{
-        res.status(401).json({status:false,msg:"Product already added in the cart"})
+
+        // Validate required fields
+        if (!productTitle || !image || !price || !productId || !userId) {
+            return res.status(400).json({
+                status: false,
+                msg: "Missing required product information"
+            });
+        }
+
+        // Check if product is in stock
+        if (countInStock < 1) {
+            return res.status(400).json({
+                status: false,
+                msg: "Product is out of stock"
+            });
+        }
+
+        // Calculate subTotal
+        const subTotal = price * quantity;
+
+        const cartItem = new Cart({
+            productTitle,
+            image,
+            rating,
+            price,
+            quantity,
+            subTotal,
+            productId,
+            userId,
+            countInStock,
+            weight
+        });
+
+        const savedCart = await cartItem.save();
+        
+        if (!savedCart) {
+            return res.status(400).json({
+                status: false,
+                msg: "Failed to add item to cart"
+            });
+        }
+
+        res.status(200).json({
+            status: true,
+            msg: "Item added to cart successfully",
+            cart: savedCart
+        });
+
+    } catch (error) {
+        console.error('Add to cart error:', error);
+        res.status(500).json({
+            status: false,
+            msg: error.message || "Error adding item to cart"
+        });
     }
-
-   
-
 });
 
 

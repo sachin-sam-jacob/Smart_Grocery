@@ -12,6 +12,9 @@ import GoogleImg from "../../assets/images/googleImg.png";
 import { postData } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
+import Swal from "sweetalert2";
+import 'animate.css';
+
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
 
@@ -54,12 +57,17 @@ const SignUp = () => {
 
   const validatePhone = (phone) => {
     const regex = /^[0-9]{10}$/;
-    const isRepeating = /^(\d)\1{9}$/.test(phone); // Check if all digits are the same
+    const isRepeating = /^(\d)\1{9}$/.test(phone); // Check if all digits are same
+    const isSequential = /^(?:0123456789|1234567890|9876543210)$/.test(phone); // Check for sequential numbers
+    
     if (!regex.test(phone)) {
-      return "Phone number must be exactly 10 digits.";
+        return "Phone number must be exactly 10 digits.";
     }
     if (isRepeating) {
-      return "Phone number cannot consist of repeating digits.";
+        return "Phone number cannot have all same digits.";
+    }
+    if (isSequential) {
+        return "Phone number cannot be sequential.";
     }
     return "";
   };
@@ -132,84 +140,189 @@ const SignUp = () => {
   const register = (e) => {
     e.preventDefault();
 
-    const phoneError = validatePhone(formfields.phone);
-    const passwordError = validatePassword(formfields.password);
-    const emailError = validateEmail(formfields.email);
-    const confirmPasswordError = validateConfirmPassword(formfields.confirmPassword);
-
-    if (formfields.name === "") {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: "Name cannot be blank.",
-      });
-      return false;
-    }
-
-    if (emailError) {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: emailError,
-      });
-      return false;
-    }
-
-    if (phoneError) {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: phoneError,
-      });
-      return false;
-    }
-
-    if (passwordError) {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: passwordError,
-      });
-      return false;
-    }
-
-    if (confirmPasswordError) {
-      context.setAlertBox({
-        open: true,
-        error: true,
-        msg: confirmPasswordError,
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-
-    postData("/api/user/signup", formfields)
-      .then((res) => {
-        if (res.error !== true) {
-          context.setAlertBox({
-            open: true,
-            error: false,
-            msg: "Register Successfully!",
-          });
-
-          setTimeout(() => {
-            setIsLoading(true);
-            history("/signIn");
-          }, 2000);
-        } else {
-          setIsLoading(false);
-          context.setAlertBox({
-            open: true,
-            error: true,
-            msg: res.msg,
-          });
+    // Check all required fields
+    const validations = [
+        {
+            field: 'name',
+            value: formfields.name,
+            message: 'Please enter your name',
+            error: validateName(formfields.name)
+        },
+        {
+            field: 'email',
+            value: formfields.email,
+            message: 'Please enter your email address',
+            error: validateEmail(formfields.email)
+        },
+        {
+            field: 'phone',
+            value: formfields.phone,
+            message: 'Please enter your phone number',
+            error: validatePhone(formfields.phone)
+        },
+        {
+            field: 'password',
+            value: formfields.password,
+            message: 'Please enter your password',
+            error: validatePassword(formfields.password)
+        },
+        {
+            field: 'confirmPassword',
+            value: formfields.confirmPassword,
+            message: 'Please confirm your password',
+            error: validateConfirmPassword(formfields.confirmPassword)
         }
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        console.error("Error posting data:", error);
-      });
+    ];
+
+    // Check for empty fields first
+    const emptyField = validations.find(v => !v.value);
+    if (emptyField) {
+        Swal.fire({
+            title: `<span style="color: #dc3545">${emptyField.field.charAt(0).toUpperCase() + emptyField.field.slice(1)} Required</span>`,
+            html: `<div class="custom-error-message">${emptyField.message}</div>`,
+            icon: 'warning',
+            background: '#fff',
+            customClass: {
+                popup: 'animated fadeInDown error-popup',
+                title: 'error-title',
+                htmlContainer: 'error-container',
+            },
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545',
+            padding: '2em',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+        return false;
+    }
+
+    // Check for validation errors
+    const validationError = validations.find(v => v.error);
+    if (validationError) {
+        Swal.fire({
+            title: `<span style="color: #dc3545">Invalid ${validationError.field.charAt(0).toUpperCase() + validationError.field.slice(1)}</span>`,
+            html: `<div class="custom-error-message">${validationError.error}</div>`,
+            icon: 'error',
+            background: '#fff',
+            customClass: {
+                popup: 'animated fadeInDown error-popup',
+                title: 'error-title',
+                htmlContainer: 'error-container',
+            },
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545',
+            padding: '2em',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+        return false;
+    }
+
+    // If all validations pass, show confirmation dialog
+    Swal.fire({
+        title: 'Create Account?',
+        text: "You're about to create a new account",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, create account',
+        background: '#fff',
+        customClass: {
+            popup: 'animated fadeInDown',
+        },
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            setIsLoading(true);
+            postData("/api/user/signup", formfields)
+                .then((res) => {
+                    if (!res.error) {
+                        Swal.fire({
+                            title: '<span style="color: #28a745">Success!</span>',
+                            html: `<div class="custom-success-message">${res.details || 'Account created successfully!'}</div>`,
+                            icon: 'success',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false,
+                            background: '#fff',
+                            customClass: {
+                                popup: 'animated fadeInDown success-popup',
+                                title: 'success-title',
+                                htmlContainer: 'success-container',
+                            },
+                            showClass: {
+                                popup: 'animate__animated animate__fadeInDown'
+                            },
+                            hideClass: {
+                                popup: 'animate__animated animate__fadeOutUp'
+                            }
+                        }).then(() => {
+                            history("/signIn");
+                        });
+                    } else {
+                        throw new Error(res.msg);
+                    }
+                })
+                .catch((error) => {
+                    let errorMessage = error.message;
+                    let errorTitle = 'Registration Failed';
+                    
+                    // Handle specific error cases
+                    if (error.message.includes('HTTP error! status: 400')) {
+                        if (error.message.includes('Email Already Exists')) {
+                            errorTitle = 'Email Already Registered';
+                            errorMessage = 'This email address is already registered. Please use a different email or sign in.';
+                        } else {
+                            errorMessage = 'Something went wrong during registration. Please try again.';
+                        }
+                    }
+
+                    Swal.fire({
+                        title: `<span style="color: #dc3545">${errorTitle}</span>`,
+                        html: `<div class="custom-error-message">${errorMessage}</div>`,
+                        icon: 'error',
+                        background: '#fff',
+                        customClass: {
+                            popup: 'animated fadeInDown error-popup',
+                            title: 'error-title',
+                            htmlContainer: 'error-container',
+                        },
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#dc3545',
+                        padding: '2em',
+                        borderRadius: '15px',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        }
+                    });
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
+        }
+    });
   };
 
   const signInWithGoogle = () => {

@@ -71,13 +71,17 @@ cloudinary.config({
     const { name, phone, email, password, isAdmin } = req.body;
 
     try {
-        const existingUser = await User.findOne({ email: email });
-        const existingUserByPh = await User.findOne({ phone: phone });
-
-        if (existingUser && existingUserByPh) {
-            res.status(400).json({ error: true, msg: "User already exists!" });
+        // Only check for existing email, remove phone number check
+        const existingUserByEmail = await User.findOne({ email: email });
+        if (existingUserByEmail) {
+            return res.status(400).json({ 
+                error: true, 
+                msg: "Email Already Exists",
+                details: "This email address is already registered. Please use a different email or sign in."
+            });
         }
 
+        // Phone number validation is only for format, not uniqueness
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const result = await User.create({
@@ -88,16 +92,25 @@ cloudinary.config({
             isAdmin: isAdmin
         });
 
-        const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        const token = jwt.sign(
+            { email: result.email, id: result._id }, 
+            process.env.JSON_WEB_TOKEN_SECRET_KEY
+        );
 
         res.status(200).json({
             user: result,
-            token: token
+            token: token,
+            msg: "Registration Successful",
+            details: "Your account has been created successfully!"
         });
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, msg: "Something went wrong" });
+        res.status(500).json({ 
+            error: true, 
+            msg: "Registration Failed",
+            details: "Something went wrong while creating your account. Please try again."
+        });
     }
 });
 

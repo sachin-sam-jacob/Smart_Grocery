@@ -177,29 +177,60 @@ function App({ navigate, location }) {
   };
 
   const addToCart = (data) => {
-    if (isLogin) {
-      setAddingInCart(true);
-      postData(`/api/cart/add`, data).then((res) => {
-        if (res.status !== false) {
-          swal.fire("success", "Product added to Cart!", "success");
+    return new Promise((resolve, reject) => {
+        if (isLogin) {
+            setAddingInCart(true);
+            const user = JSON.parse(localStorage.getItem("user"));
+            
+            const cartData = {
+                productTitle: data.productTitle || data.name,
+                image: data.image,
+                rating: data.rating || 0,
+                price: data.price,
+                quantity: data.quantity || 1,
+                productId: data.productId || data._id,
+                userId: user.userId,
+                countInStock: data.countInStock,
+                weight: data.weight || data.productWeight,
+                subTotal: data.price * (data.quantity || 1)
+            };
 
-          setTimeout(() => {
-            setAddingInCart(false);
-          }, 1000);
-
-          getCartData();
+            postData(`/api/cart/add`, cartData)
+                .then((res) => {
+                    setAddingInCart(false);
+                    if (!res.error && res.status !== false) {
+                        getCartData();
+                        resolve(res);
+                    } else {
+                        // Pass the server error message
+                        reject({
+                            status: 400,
+                            message: res.msg || "Failed to add product to cart"
+                        });
+                    }
+                })
+                .catch((error) => {
+                    setAddingInCart(false);
+                    // Handle API error from api.js
+                    if (error.message.includes('HTTP error! status: 400')) {
+                        reject({
+                            status: 400,
+                            message: "This product is already in your cart"
+                        });
+                    } else {
+                        reject({
+                            status: 500,
+                            message: "Failed to add product to cart"
+                        });
+                    }
+                });
         } else {
-          swal.fire(res.msg);
-          setAddingInCart(false);
+            reject({
+                status: 401,
+                message: "Please login to add items to cart"
+            });
         }
-      });
-    } else {
-      setAlertBox({
-        open: true,
-        error: true,
-        msg: "Please login first",
-      });
-    }
+    });
   };
 
   const contextValue = {

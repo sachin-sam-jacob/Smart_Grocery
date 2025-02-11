@@ -19,17 +19,14 @@ const cartSchema = mongoose.Schema({
     },
     quantity:{
         type:Number,
-        required:true
+        required:true,
+        default: 1
     },
     subTotal:{
         type:Number,
         required:true
     },
     productId:{
-        type:String,
-        required:true
-    },
-        productId:{
         type:String,
         required:true
     },

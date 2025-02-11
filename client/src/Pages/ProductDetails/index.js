@@ -200,25 +200,70 @@ const ProductDetails = () => {
             if (isDeliverablePincode) {
                 const user = JSON.parse(localStorage.getItem("user"));
 
-                cartFields.productTitle = productData?.name;
-                cartFields.image = productData?.images[0];
-                cartFields.rating = productData?.rating;
-                cartFields.price = productData?.price;
-                cartFields.quantity = productQuantity;
-                cartFields.subTotal = parseInt(productData?.price * productQuantity);
-                cartFields.productId = productData?.id;
-                cartFields.countInStock = productData?.countInStock;
-                cartFields.productWeight = productData?.productWeight[0];
-                cartFields.userId = user?.userId;
+                const cartFields = {
+                    productTitle: productData?.name,
+                    image: productData?.images[0],
+                    rating: productData?.rating,
+                    price: productData?.price,
+                    quantity: productQuantity,
+                    subTotal: parseInt(productData?.price * productQuantity),
+                    productId: productData?.id,
+                    countInStock: productData?.countInStock,
+                    productWeight: productData?.productWeight[activeSize],
+                    userId: user?.userId
+                };
 
-                context.addToCart(cartFields);
+                context.addToCart(cartFields)
+                    .then((response) => {
+                        if (response.status) {
+                            swal.fire({
+                                title: 'Success',
+                                text: response.msg,
+                                icon: 'success',
+                                timer: 1500,
+                                timerProgressBar: true,
+                                showConfirmButton: false
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        // Handle specific error messages
+                        let errorMessage = error.message;
+                        
+                        // Remove the "Error:" prefix if it exists
+                        errorMessage = errorMessage.replace('Error:', '').trim();
+                        
+                        swal.fire({
+                            title: 'Notice',
+                            text: errorMessage,
+                            icon: 'info',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: true
+                        });
+                    });
             } else {
-                setPincodeError('Please enter a deliverable pincode');
+                swal.fire({
+                    title: 'Delivery Check Required',
+                    text: 'Please enter a deliverable pincode first',
+                    icon: 'warning',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
             }
         } else {
+            swal.fire({
+                title: 'Selection Required',
+                text: 'Please select a product weight',
+                icon: 'warning',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: true
+            });
             setTabError(true);
         }
-    }
+    };
 
     const selectedItem = () => {
 

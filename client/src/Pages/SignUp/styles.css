@@ -1,0 +1,21 @@
+.success-popup {
+    border-radius: 15px !important;
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.1) !important;
+}
+
+.success-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #28a745 !important;
+}
+
+.custom-success-message {
+    font-size: 1.1rem;
+    color: #28a745;
+    margin: 1rem 0;
+    line-height: 1.5;
+}
+
+.success-container {
+    padding: 1rem 0;
+} 
