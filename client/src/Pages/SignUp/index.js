@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import Swal from "sweetalert2";
 import 'animate.css';
+import './styles.css';
 
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { firebaseApp } from "../../firebase";
@@ -403,8 +404,22 @@ const SignUp = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  const handleBackToHomepage = () => {
+    window.location.href = "/"; // Navigate to homepage and reload
+  };
+
   return (
     <section className="section signInPage">
+      <div className="back-button-container">
+        <Button 
+          onClick={handleBackToHomepage}
+          className="back-to-home-btn"
+          startIcon={<i className="fas fa-arrow-left"></i>}
+        >
+          Back to Homepage
+        </Button>
+      </div>
+
       <div className="shape-bottom">
         <svg
           fill="#fff"

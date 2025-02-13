@@ -10,6 +10,7 @@ import { postData } from "../../utils/api";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import Swal from 'sweetalert2';
 import 'animate.css';
+import './styles.css';
 import { firebaseApp } from "../../firebase"; // Ensure firebaseApp is correctly initialized
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
@@ -243,6 +244,16 @@ const SignIn = () => {
 
   return (
     <section className="section signInPage">
+      <div className="back-button-container">
+        <Button 
+          onClick={handleBackToHomepage}
+          className="back-to-home-btn"
+          startIcon={<i className="fas fa-arrow-left"></i>}
+        >
+          Back to Homepage
+        </Button>
+      </div>
+
       <div className="shape-bottom">
         <svg
           fill="#fff"
@@ -332,32 +343,6 @@ const SignIn = () => {
             >
               <img src={GoogleImg} alt="Google" /> Sign In with Google
             </Button>
-
-               {/* Add Back to Homepage Button */}
-               <div style={{ textAlign: 'center', margin: '20px 0' }}>
-              <Button 
-                onClick={handleBackToHomepage} 
-                style={{
-                  textDecoration: 'none',
-                  color: 'white',
-                  backgroundColor: '#007bff',
-                  fontWeight: 'bold',
-                  fontSize: '18px',
-                  padding: '10px 20px',
-                  border: 'none',
-                  borderRadius: '5px',
-                  transition: 'background-color 0.3s',
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#0056b3'; // Darker blue on hover
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#007bff'; // Original blue
-                }}
-              >
-                Back to Homepage
-              </Button>
-            </div>
           </form>
         </div>
       </div>
