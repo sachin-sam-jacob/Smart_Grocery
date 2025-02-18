@@ -20,40 +20,56 @@
     padding: 1rem 0;
 }
 
-.back-button-container {
+.back-to-home-wrapper {
     position: fixed;
-    top: 30px;
-    left: 30px;
+    top: 20px;
+    left: 20px;
     z-index: 1000;
 }
 
 .back-to-home-btn {
-    background: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    padding: 10px 20px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    transition: all 0.3s ease !important;
-    color: #1a73e8 !important;
-    font-weight: 500 !important;
-    text-transform: none !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50px;
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
 }
 
 .back-to-home-btn:hover {
-    background: rgba(255, 255, 255, 1) !important;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+    background: rgba(255, 255, 255, 1);
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .back-to-home-btn i {
-    font-size: 16px;
+    font-size: 14px;
     transition: transform 0.3s ease;
 }
 
 .back-to-home-btn:hover i {
-    transform: translateX(-4px);
+    transform: translateX(-3px);
+}
+
+@media (max-width: 768px) {
+    .back-to-home-btn span {
+        display: none;
+    }
+    
+    .back-to-home-btn {
+        padding: 12px;
+        border-radius: 50%;
+    }
+    
+    .back-to-home-btn i {
+        margin: 0;
+    }
 } 

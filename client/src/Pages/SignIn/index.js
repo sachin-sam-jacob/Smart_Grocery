@@ -244,14 +244,15 @@ const SignIn = () => {
 
   return (
     <section className="section signInPage">
-      <div className="back-button-container">
-        <Button 
+      {/* Add Back to Homepage Button */}
+      <div className="back-to-home-wrapper">
+        <button 
           onClick={handleBackToHomepage}
           className="back-to-home-btn"
-          startIcon={<i className="fas fa-arrow-left"></i>}
         >
-          Back to Homepage
-        </Button>
+          <i className="fas fa-arrow-left"></i>
+          <span>Back to Homepage</span>
+        </button>
       </div>
 
       <div className="shape-bottom">
