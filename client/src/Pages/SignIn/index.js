@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
 import 'animate.css';
 import './styles.css';
 import { firebaseApp } from "../../firebase"; // Ensure firebaseApp is correctly initialized
+import FaceLogin from '../../Components/FaceLogin/FaceLogin';
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
 
@@ -20,6 +21,7 @@ const SignIn = () => {
   const context = useContext(MyContext);
   const navigate = useNavigate(); // useNavigate instead of history
   const location = useLocation();
+  const [showFaceLogin, setShowFaceLogin] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -234,12 +236,75 @@ const SignIn = () => {
       });
   };
 
-  // const handleForgot=(res) => {
-  //   navigate(`/forgotpassword`)
-  // };
+  const handleFaceLogin = async (faceDescriptor) => {
+    try {
+      setIsLoading(true);
+      console.log('Attempting face login...');
+      console.log(faceDescriptor);
+      const response = await postData('/api/face/login', { faceDescriptor });
+      console.log(response);
+      if (response.success) {
+        const user = {
+          name: response.user.name,
+          email: response.user.email,
+          userId: response.user.id,
+          isStockManager: response.user.isStockManager,
+          location: response.user.location,
+        };
+
+        handleSuccessfulLogin(
+          user,
+          response.token,
+          response.user.isAdmin,
+          response.user.isStockManager
+        );
+      } else {
+        throw new Error(response.message || 'Face login failed');
+      }
+    } catch (error) {
+      console.error('Face login error:', error);
+      Swal.fire({
+        title: 'Face Login Failed',
+        text: 'Face ID not recognized. Please try again or use password.',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonText: 'Try Again',
+        cancelButtonText: 'Use Password'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setShowFaceLogin(true); // Retry face login
+        } else {
+          setShowFaceLogin(false); // Switch to password login
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleBackToHomepage = () => {
     window.location.href = "/"; // Navigate to homepage and reload
+  };
+
+  const renderFaceLoginModal = () => {
+    if (!showFaceLogin) return null;
+
+    return (
+      <div className="face-login-modal">
+        <div className="face-login-modal-content">
+          <button 
+            className="close-modal-btn"
+            onClick={() => setShowFaceLogin(false)}
+          >
+            <i className="fas fa-times"></i>
+          </button>
+          <FaceLogin
+            onFaceDetected={handleFaceLogin}
+            mode="login"
+          />
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -337,16 +402,30 @@ const SignIn = () => {
               Or continue with social account
             </h6>
 
-            <Button
-              className="loginWithGoogle mt-2"
-              variant="outlined"
-              onClick={signInWithGoogle}
-            >
-              <img src={GoogleImg} alt="Google" /> Sign In with Google
-            </Button>
+            <div className="login-options mt-4">
+              <Button
+                className="loginWithGoogle mb-3 w-100"
+                variant="outlined"
+                onClick={signInWithGoogle}
+              >
+                <img src={GoogleImg} alt="Google" /> Sign In with Google
+              </Button>
+
+              <Button
+                className="faceIdLogin w-100"
+                variant="outlined"
+                onClick={() => setShowFaceLogin(true)}
+                startIcon={<i className="fas fa-face-viewfinder"></i>}
+              >
+                Sign In with Face ID
+              </Button>
+            </div>
           </form>
         </div>
       </div>
+
+      {/* Render face login modal */}
+      {renderFaceLoginModal()}
     </section>
   );
 };

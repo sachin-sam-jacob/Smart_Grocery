@@ -6,6 +6,7 @@ const cors = require('cors');
 require('dotenv').config();
 const axios = require('axios');
 const schedulePriceUpdates = require('./utils/priceUpdateScheduler');
+const faceRecognitionRoutes = require('./routes/faceRecognition');
 
 
 app.use(cors());
@@ -81,6 +82,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/voice-assistant', voiceAssistantRoutes);
 app.use('/api/visual-search', visualSearchRoutes);
 app.use('/api/dynamic-pricing', dynamicPricingRoutes);
+app.use('/api/face', faceRecognitionRoutes);
 
 
 // Add this before your routes

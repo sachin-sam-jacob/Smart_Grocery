@@ -83,4 +83,71 @@
     .back-to-home-btn i {
         margin: 0;
     }
+}
+
+.face-login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.face-login-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  z-index: 1;
+  padding: 5px;
+  transition: color 0.3s ease;
+}
+
+.close-modal-btn:hover {
+  color: #333;
+}
+
+.login-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faceIdLogin {
+  background-color: #f8f9fa !important;
+  border-color: #ddd !important;
+  color: #333 !important;
+  padding: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.faceIdLogin:hover {
+  background-color: #e9ecef !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+@media (max-width: 768px) {
+  .face-login-modal-content {
+    width: 95%;
+    margin: 20px;
+  }
 } 

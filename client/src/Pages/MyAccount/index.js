@@ -21,6 +21,7 @@ import {
 import { MyContext } from "../../App";
 
 import NoUserImg from "../../assets/images/no-user.jpg";
+import FaceLogin from '../../Components/FaceLogin/FaceLogin';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -87,6 +88,8 @@ const MyAccount = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [showFaceRegistration, setShowFaceRegistration] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -317,6 +320,31 @@ const MyAccount = () => {
     }
   };
 
+  const handleFaceRegistration = async (faceDescriptor) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await postData('/api/face/register', {
+        userId: user?.userId,
+        faceDescriptor
+      });
+
+      if (response.success) {
+        context.setAlertBox({
+          open: true,
+          error: false,
+          msg: 'Face ID registered successfully'
+        });
+        setShowFaceRegistration(false);
+      }
+    } catch (error) {
+      context.setAlertBox({
+        open: true,
+        error: true,
+        msg: 'Failed to register Face ID. Please try again.'
+      });
+    }
+  };
+
   return (
     <section className="section myAccountPage">
       <div className="container">
@@ -331,6 +359,7 @@ const MyAccount = () => {
             >
               <Tab label="Edit Profile" {...a11yProps(0)} />
               <Tab label="Change Password" {...a11yProps(1)} />
+              <Tab label="Face ID Setup" {...a11yProps(2)} />
             </Tabs>
           </Box>
           <CustomTabPanel value={value} index={0}>
@@ -467,6 +496,48 @@ const MyAccount = () => {
                 </div>
               </div>
             </form>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={2}>
+            <div className="face-id-section">
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="text-center mb-4">
+                    <h4>Face ID Authentication Setup</h4>
+                    <p className="text-muted">
+                      Register your face for quick and secure login to your account
+                    </p>
+                  </div>
+
+                  {!showFaceRegistration ? (
+                    <div className="text-center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setShowFaceRegistration(true)}
+                        className="register-face-btn"
+                        startIcon={<i className="fas fa-face-viewfinder"></i>}
+                      >
+                        Start Face ID Registration
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="face-registration-container">
+                      <Button
+                        className="mb-3"
+                        onClick={() => setShowFaceRegistration(false)}
+                        startIcon={<i className="fas fa-arrow-left"></i>}
+                      >
+                        Back
+                      </Button>
+                      <FaceLogin
+                        onFaceDetected={handleFaceRegistration}
+                        mode="register"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </CustomTabPanel>
         </Box>
       </div>

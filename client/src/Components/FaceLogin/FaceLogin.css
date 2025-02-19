@@ -1,0 +1,138 @@
+.face-login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  min-height: 400px;
+}
+
+.face-login-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.face-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  transition: all 0.3s ease;
+}
+
+.face-video.face-detected {
+  border: 3px solid #4caf50;
+}
+
+.face-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.face-frame {
+  width: 280px;
+  height: 280px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detection-progress {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-circle {
+  color: #4caf50 !important;
+}
+
+.progress-text {
+  position: absolute;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.face-instructions {
+  margin-top: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+  animation: pulse 2s infinite;
+}
+
+.start-camera-btn {
+  margin-top: 20px !important;
+  padding: 12px 24px !important;
+  font-size: 1.1rem !important;
+  background-color: #1976d2 !important;
+  transition: all 0.3s ease !important;
+}
+
+.start-camera-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.2) !important;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@media (max-width: 768px) {
+  .face-login-container {
+    padding: 10px;
+  }
+
+  .face-frame {
+    width: 220px;
+    height: 220px;
+  }
+
+  .progress-circle {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .progress-text {
+    font-size: 1rem;
+  }
+} 
