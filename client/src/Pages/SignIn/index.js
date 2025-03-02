@@ -414,6 +414,7 @@ const SignIn = () => {
               <Button
                 className="faceIdLogin w-100"
                 variant="outlined"
+                id="faceIdLogin"
                 onClick={() => setShowFaceLogin(true)}
                 startIcon={<i className="fas fa-face-viewfinder"></i>}
               >

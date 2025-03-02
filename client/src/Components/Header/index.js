@@ -188,6 +188,7 @@ const Header = () => {
                                             <VisualSearch 
                                                 addToCart={addToCart}
                                                 buttonStyle="icon"
+                                                id="visualSearch"
                                             />
                                         </div>
                                     </div>

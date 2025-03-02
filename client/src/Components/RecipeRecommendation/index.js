@@ -273,7 +273,7 @@ const RecipeRecommendation = ({ cartItems }) => {
             <StyledButton
                 onClick={getRecipes}
                 disabled={isLoading || cartItems.length === 0}
-                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <RestaurantIcon />}
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" id="loading" /> : <RestaurantIcon />}
             >
                 {isLoading ? 'Getting Recipes...' : 'Get Recipe Suggestions'}
             </StyledButton>

@@ -239,6 +239,7 @@ const FaceLogin = ({ onFaceDetected, mode = 'login' }) => {
 					variant="contained" 
 					color="primary" 
 					onClick={startVideo}
+					id="startFaceIdLogin"
 					className="start-camera-btn"
 					disabled={!modelsLoaded}
 				>

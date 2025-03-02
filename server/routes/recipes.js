@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
 
         // Get the Gemini Pro model
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-pro",
+            model: "gemini-1.5-pro-latest",
             generationConfig: {
                 temperature: 0.7,
                 topK: 40,
