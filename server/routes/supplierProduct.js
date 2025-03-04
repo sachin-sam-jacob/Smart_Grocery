@@ -197,4 +197,27 @@ router.get('/supplier/:supplierId/product/:productName', async (req, res) => {
     }
 });
 
+// Update stock for a supplier product
+router.post('/updateStock', async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+
+        // Deduct the quantity from the supplier product
+        const updatedProduct = await SupplierProduct.findByIdAndUpdate(
+            productId,
+            { $inc: { quantity: -quantity } },
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        res.status(200).json({ success: true, data: updatedProduct });
+    } catch (error) {
+        console.error('Error updating stock:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router; 

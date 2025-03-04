@@ -112,17 +112,28 @@ const StockOrders = () => {
             if (!orderToUpdate) {
                 throw new Error('Order not found');
             }
-
+            console.log("orderToUpdate.productId.name",orderToUpdate.productId.name);
             const supplierResponse = await fetchDataFromApi(
-                `/api/supplier-products/supplier/${user.userId}/product/${encodeURIComponent(orderToUpdate.productId.name)}`
+                `/api/supplier-products/by-name/${encodeURIComponent(orderToUpdate.productId.name)}`
             );
 
             if (supplierResponse.error) {
                 throw new Error(supplierResponse.error);
             }
 
-            const supplierPrice = supplierResponse.price;
-            const calculatedTotal = Number((supplierPrice * orderToUpdate.quantity).toFixed(2));
+            const supplierProduct = supplierResponse.data;
+
+            const updatedStockResponse = await postData(
+                `/api/supplier-products/updateStock`,
+                {
+                    productId: supplierProduct._id,
+                    quantity: orderToUpdate.quantity
+                }
+            );
+
+            if (updatedStockResponse.error) {
+                throw new Error(updatedStockResponse.error);
+            }
 
             const response = await postData(
                 `/api/stock/order/deliver/${orderId}`,
@@ -130,8 +141,8 @@ const StockOrders = () => {
                     productId: orderToUpdate.productId._id,
                     quantity: orderToUpdate.quantity,
                     location: orderToUpdate.location,
-                    supplierPrice: supplierPrice,
-                    totalAmount: calculatedTotal
+                    supplierPrice: supplierProduct.price,
+                    totalAmount: orderToUpdate.totalAmount
                 }
             );
 

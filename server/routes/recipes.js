@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
         });
 
         const prompt = `Create 3 unique recipes using these ingredients: ${productList}.
-Your response must be a valid JSON array containing exactly 3 recipe objects.
+Your response must be a valid JSON array containing exactly 4 recipe objects.
 Each recipe object must have this structure:
 {
     "name": "Recipe Name",
@@ -64,7 +64,7 @@ Each recipe object must have this structure:
 }
 
 You can add additional common ingredients that aren't in the provided list.
-Format your entire response as a single JSON array containing these 3 recipe objects.
+Format your entire response as a single JSON array containing these 4 recipe objects.
 Do not include any additional text, explanations, or formatting - only the JSON array.`;
 
         // console.log('Sending request to Gemini API...');
