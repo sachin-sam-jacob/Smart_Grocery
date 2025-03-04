@@ -48,7 +48,9 @@ router.post('/', async (req, res) => {
             });
         }
 
-        console.log('Received data:', req.body);
+        // Generate a unique product code (you can customize this logic)
+        const productCode = `PROD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        console.log(productCode)
         const product = new SupplierProduct({
             supplierId: req.body.supplierId,
             name: req.body.name,
@@ -57,7 +59,8 @@ router.post('/', async (req, res) => {
             quantity: req.body.quantity,
             quantityType: req.body.quantityType,
             category: req.body.category,
-            minStockAlert: req.body.minStockAlert
+            minStockAlert: req.body.minStockAlert,
+            productCode: productCode // Assign the generated product code
         });
 
         const savedProduct = await product.save();
@@ -130,6 +133,7 @@ router.get('/:id', async (req, res) => {
 
         res.json(product);
     } catch (error) {
+        console.error('Error fetching supplier product:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -138,12 +142,12 @@ router.get('/:id', async (req, res) => {
 router.get('/by-name/:name', async (req, res) => {
     try {
         const productName = req.params.name;
-        
+        console.log(productName)
         const product = await SupplierProduct.findOne({
-            name: { $regex: new RegExp(`^${productName}$`, 'i') },
+            name: productName,
             status: 'active'
         });
-
+        console.log(product)
         if (!product) {
             return res.status(404).json({ 
                 success: false, 

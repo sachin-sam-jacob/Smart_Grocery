@@ -38,6 +38,11 @@ const supplierProductSchema = new mongoose.Schema({
         required: true,
         default: 10
     },
+    productCode: {
+        type: String,
+        unique: true,
+        required: true
+    },
     status: {
         type: String,
         enum: ['active', 'inactive'],
