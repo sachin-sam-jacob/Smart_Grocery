@@ -9,6 +9,6 @@ cd "$(dirname "$0")"
 if [ -d "venv" ]; then
     source venv/bin/activate
 fi
-
+pip install -r requirements.txt
 # Start the Flask server
 python app.py
