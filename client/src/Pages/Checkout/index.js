@@ -24,6 +24,11 @@ const Checkout = () => {
 
     const [cartData, setCartData] = useState([]);
     const [totalAmount, setTotalAmount] = useState();
+    const [pincodeValidated, setPincodeValidated] = useState(false);
+    const [nonDeliverableProducts, setNonDeliverableProducts] = useState([]);
+    const [showPincodeError, setShowPincodeError] = useState(false);
+    const [deliveryInfo, setDeliveryInfo] = useState(null);
+    const [deliverableProducts, setDeliverableProducts] = useState([]);
 
     useEffect(() => {
         window.scrollTo(0,0)
@@ -39,20 +44,34 @@ const Checkout = () => {
 
     }, []);
 
-    const onChangeInput = (e) => {
-        setFormFields(() => ({
-            ...formFields,
-            [e.target.name]: e.target.value
-        }))
+    const onChangeInput = async (e) => {
+        const { name, value } = e.target;
+        setFormFields(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        // Validate pincode when zipCode field changes
+        if (name === 'zipCode' && value.length === 6) {  // Assuming 6-digit pincode
+            await validatePincode(value);
+        }
     }
 
     const context = useContext(MyContext);
     const history = useNavigate();
 
-    const checkout = (e) => {
-
+    const checkout = async (e) => {
         e.preventDefault();
 
+        // Add pincode validation check
+        if (!pincodeValidated) {
+            context.setAlertBox({
+                open: true,
+                error: true,
+                msg: "Please enter a valid pincode where all products can be delivered"
+            });
+            return false;
+        }
 
         console.log(cartData)
 
@@ -237,6 +256,43 @@ const Checkout = () => {
             });
     };
 
+    // Function to validate pincode
+    const validatePincode = async (pincode) => {
+        try {
+            const response = await postData('/api/pincodes/check-deliverability', {
+                pincode: pincode,
+                products: cartData
+            });
+
+            if (response.success) {
+                setPincodeValidated(response.isAllDeliverable);
+                setNonDeliverableProducts(response.nonDeliverableProducts);
+                setDeliverableProducts(response.deliverableProducts);
+                setShowPincodeError(!response.isAllDeliverable);
+                setDeliveryInfo({
+                    district: response.deliveryDistrict,
+                    pincode: pincode
+                });
+
+                // Show success message if all products are deliverable
+                if (response.isAllDeliverable) {
+                    context.setAlertBox({
+                        open: true,
+                        error: false,
+                        msg: `Delivery available to ${response.deliveryDistrict}`
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error validating pincode:', error);
+            context.setAlertBox({
+                open: true,
+                error: true,
+                msg: "Error validating pincode. Please try again."
+            });
+        }
+    };
+
     return (
         <section className='section'>
             <div className='container'>
@@ -307,9 +363,62 @@ const Checkout = () => {
                             <div className='row'>
                                 <div className='col-md-12'>
                                     <div className='form-group'>
-                                        <TextField label="ZIP Code" variant="outlined" className='w-100' size="small" name="zipCode" onChange={onChangeInput} />
+                                        <TextField 
+                                            label="ZIP Code" 
+                                            variant="outlined" 
+                                            className='w-100' 
+                                            size="small" 
+                                            name="zipCode" 
+                                            onChange={onChangeInput}
+                                            error={showPincodeError}
+                                            helperText={showPincodeError ? 
+                                                "Some products cannot be delivered to this pincode" : 
+                                                deliveryInfo ? 
+                                                `Delivery available to ${deliveryInfo.district}` : ""}
+                                        />
                                     </div>
+                                    
+                                    {/* Display delivery status */}
+                                    {deliveryInfo && (
+                                        <div className={`alert ${showPincodeError ? 'alert-warning' : 'alert-success'} mt-2`}>
+                                            <h6>Delivery Information for {deliveryInfo.district}</h6>
+                                            
+                                            {showPincodeError && (
+                                                <>
+                                                    <p>The following products cannot be delivered to pincode {deliveryInfo.pincode}:</p>
+                                                    <ul className="text-danger">
+                                                        {nonDeliverableProducts.map((product, index) => (
+                                                            <li key={index}>
+                                                                {product.productTitle}
+                                                                <br/>
+                                                                <small>
+                                                                    {product.deliveryMessage}
+                                                                </small>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    <p>Please remove these products from your cart or try a different pincode.</p>
+                                                </>
+                                            )}
 
+                                            {deliverableProducts.length > 0 && (
+                                                <>
+                                                    <p>Products available for delivery:</p>
+                                                    <ul className="text-success">
+                                                        {deliverableProducts.map((product, index) => (
+                                                            <li key={index}>
+                                                                {product.productTitle}
+                                                                <br/>
+                                                                <small>
+                                                                    {product.deliveryMessage}
+                                                                </small>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -385,8 +494,14 @@ const Checkout = () => {
                                     </table>
                                 </div>
 
-                                <Button type="submit" className='btn-blue bg-red btn-lg btn-big'
-                                ><IoBagCheckOutline /> &nbsp; Checkout</Button>
+                                <Button 
+                                    type="submit" 
+                                    className='btn-blue bg-red btn-lg btn-big'
+                                    disabled={!pincodeValidated}
+                                >
+                                    <IoBagCheckOutline /> &nbsp; 
+                                    {!pincodeValidated ? 'Please Enter Valid Pincode' : 'Checkout'}
+                                </Button>
 
                             </div>
                         </div>

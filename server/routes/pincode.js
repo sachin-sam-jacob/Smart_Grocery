@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const District = require('../models/pincode');
+const { Product } = require('../models/products');
 
 // Add new pincode
 router.post('/add', async (req, res) => {
@@ -149,6 +150,83 @@ router.get('/check/:pincode', async (req, res) => {
         return res.json({
             error: true,
             msg: 'Error checking pincode'
+        });
+    }
+});
+
+router.post('/check-deliverability', async (req, res) => {
+    try {
+        const { pincode, products } = req.body;
+        const productIds = products.map(p => p.productId);
+
+        // Get all products
+        const productDetails = await Product.find({ '_id': { $in: productIds } });
+        
+        // Get the district info for the entered pincode
+        const enteredPincodeDistrict = await District.findOne({
+            'pincodes.code': pincode
+        });
+
+        if (!enteredPincodeDistrict) {
+            return res.json({
+                success: false,
+                error: 'Pincode not found in our delivery network'
+            });
+        }
+
+        // Check deliverability for each product
+        const deliverabilityStatus = await Promise.all(productDetails.map(async (product) => {
+            let isDeliverable = false;
+            let deliveryMessage = '';
+
+            // If product location is 'All', it's deliverable everywhere
+            if (product.location === 'All') {
+                isDeliverable = true;
+                deliveryMessage = 'Available for delivery everywhere';
+            } else {
+                // Find the district that matches the product's location
+                const productLocationDistrict = await District.findOne({
+                    name: product.location
+                });
+
+                if (!productLocationDistrict) {
+                    deliveryMessage = `Product location ${product.location} not found in delivery network`;
+                } else if (product.location === enteredPincodeDistrict.name) {
+                    // If product's location district matches the pincode's district
+                    isDeliverable = true;
+                    deliveryMessage = `Available for delivery in ${product.location}`;
+                } else {
+                    deliveryMessage = `Only available for delivery in ${product.location}`;
+                }
+            }
+
+            return {
+                productId: product._id,
+                productTitle: product.name,
+                isDeliverable: isDeliverable,
+                location: product.location,
+                deliveryMessage: deliveryMessage,
+                enteredPincode: pincode,
+                deliveryDistrict: enteredPincodeDistrict.name
+            };
+        }));
+
+        // Filter out non-deliverable products
+        const nonDeliverableProducts = deliverabilityStatus.filter(p => !p.isDeliverable);
+
+        res.json({
+            success: true,
+            isAllDeliverable: nonDeliverableProducts.length === 0,
+            nonDeliverableProducts: nonDeliverableProducts,
+            deliveryDistrict: enteredPincodeDistrict.name,
+            deliverableProducts: deliverabilityStatus.filter(p => p.isDeliverable)
+        });
+
+    } catch (error) {
+        console.error('Error checking deliverability:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error checking product deliverability'
         });
     }
 });
