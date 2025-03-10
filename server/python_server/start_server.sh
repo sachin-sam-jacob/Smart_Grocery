@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 # Create virtual environment if it does not exist
 if [ ! -d "virtual_env" ]; then
     echo "Creating virtual environment..."
-    python3 -m venv virtual_env
+    python -m venv virtual_env
 fi
 
 # Activate virtual environment
