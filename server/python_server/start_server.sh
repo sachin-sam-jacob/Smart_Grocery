@@ -6,13 +6,13 @@ echo "Starting Python server..."
 cd "$(dirname "$0")"
 
 # Create virtual environment if it does not exist
-if [ ! -d "venv" ]; then
+if [ ! -d "virtual_env" ]; then
     echo "Creating virtual environment..."
-    python3 -m venv venv
+    python3 -m venv virtual_env
 fi
 
 # Activate virtual environment
-source venv/bin/activate
+source virtual_env/bin/activate
 
 # Upgrade pip
 pip install --upgrade pip
