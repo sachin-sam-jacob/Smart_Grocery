@@ -21,17 +21,5 @@ echo "Pip upgraded"
 pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
 echo "Dependencies installed"
 
-# Install Gunicorn if not installed
-if ! command -v gunicorn &> /dev/null; then
-    echo "Installing Gunicorn..."
-    pip install gunicorn || { echo "Failed to install Gunicorn"; exit 1; }
-fi
-
-# Start Flask server
-if [ "$NODE_ENV" = "production" ]; then
-    echo "Running in production mode..."
-    gunicorn app:app --bind 0.0.0.0:5000 --workers 4
-else
-    echo "Running in development mode..."
-    python app.py
-fi
+echo "Running in development mode..."
+python app.py

@@ -19,6 +19,7 @@ import { IoBarChart } from "react-icons/io5";
 import { ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import PaymentIcon from '@mui/icons-material/Payment';
+import { IoStatsChart } from "react-icons/io5";
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -212,6 +213,22 @@ const Sidebar = () => {
                             <ul className='submenu'>
                                 <li><Link to="/add-supplier">Add Supplier</Link></li>
                                 <li><Link to="/suppliers">Manage Suppliers</Link></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li>
+                        <Button className={`w-100 ${activeTab === 7 && isToggleSubmenu ? 'active' : ''}`} onClick={() => isOpenSubmenu(7)}>
+                            <span className='icon'><IoStatsChart /></span>
+                            Reports
+                            <span className='arrow'><FaAngleRight /></span>
+                        </Button>
+                        <div className={`submenuWrapper ${activeTab === 7 && isToggleSubmenu ? 'colapse' : 'colapsed'}`}>
+                            <ul className='submenu'>
+                                <li><Link to="/reports/sales">Sales Reports</Link></li>
+                                <li><Link to="/reports/inventory">Inventory Reports</Link></li>
+                                <li><Link to="/reports/supplier">Supplier Reports</Link></li>
+                                <li><Link to="/reports/custom">Custom Reports</Link></li>
                             </ul>
                         </div>
                     </li>

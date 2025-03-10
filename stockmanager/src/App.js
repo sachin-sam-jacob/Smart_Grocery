@@ -31,6 +31,7 @@ import ManageSuppliers from './pages/Suppliers/ManageSuppliers';
 import StockManagement from './pages/StockManagement/index';
 import StockAlerts from './pages/StockManagement/StockAlerts';
 import Payment from './pages/StockManagement/Payment';
+import Reports from './components/Reports';
 
 
 const MyContext = createContext();
@@ -217,6 +218,7 @@ function App() {
               <Route path="/stock-management" exact={true} element={<StockManagement />} />
               <Route path="/stock-alerts" exact={true} element={<StockAlerts />} />
               <Route path="/stock-payments" exact={true} element={<Payment />} />
+              <Route path="/reports/*" element={<Reports />} />
             </Routes>
           </div>
         </div>

@@ -1,0 +1,131 @@
+.content-wrapper {
+    padding: 24px;
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    background-color: var(--bg-content);
+    margin-top: 100px;
+}
+
+.report-container {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.report-title {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card h6 {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+}
+
+.stat-card h4 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.chart-container {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table-container {
+    margin-top: 24px;
+}
+
+.table-container .MuiTableHead-root .MuiTableCell-root {
+    background-color: var(--bg-card-dark);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.table-container .MuiTableCell-root {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-section {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.filter-section .MuiFormControl-root {
+    min-width: 200px;
+}
+
+.MuiButton-contained {
+    text-transform: none;
+    font-weight: 500;
+    padding: 8px 24px;
+}
+
+.recharts-wrapper {
+    margin: 0 auto;
+}
+
+/* Dark mode adjustments */
+.dark .report-container {
+    background-color: var(--bg-card-dark);
+}
+
+.dark .stat-card {
+    background-color: var(--bg-card-dark);
+}
+
+.dark .chart-container {
+    background-color: var(--bg-card-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 16px;
+    }
+
+    .report-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-section {
+        flex-direction: column;
+    }
+
+    .filter-section .MuiFormControl-root {
+        width: 100%;
+    }
+} 
