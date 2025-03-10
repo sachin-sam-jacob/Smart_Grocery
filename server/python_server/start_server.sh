@@ -16,9 +16,10 @@ source venv/bin/activate || source venv/Scripts/activate || { echo "Failed to ac
 
 # Upgrade pip
 pip install --upgrade pip || { echo "Failed to upgrade pip"; exit 1; }
-
+echo "Pip upgraded"         
 # Install required dependencies
 pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
+echo "Dependencies installed"
 
 # Install Gunicorn if not installed
 if ! command -v gunicorn &> /dev/null; then
