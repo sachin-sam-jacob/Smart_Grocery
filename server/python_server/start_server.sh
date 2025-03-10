@@ -19,7 +19,7 @@ else
     # Create virtual environment if it does not exist
     if [ ! -d "venv" ]; then
         echo "Creating virtual environment..."
-        python -m venv venv
+        python3 -m venv venv
     fi
 
     # Activate virtual environment
