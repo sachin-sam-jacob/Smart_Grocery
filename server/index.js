@@ -9,6 +9,7 @@ const schedulePriceUpdates = require('./utils/priceUpdateScheduler');
 const faceRecognitionRoutes = require('./routes/faceRecognition');
 const reportsRoutes = require('./routes/reports');
 const supplierRoutes = require('./routes/supplier');
+const otpVerificationRoutes = require('./routes/otpVerification');
 
 
 app.use(cors());
@@ -55,6 +56,7 @@ const dynamicPricingRoutes = require('./routes/dynamicPricing');
 app.use("/api/verifycode",verifycode);
 app.use("/api/resetpassword", resetPassword);
 app.use("/api/user",userRoutes);
+app.use("/api/otp", otpVerificationRoutes);
 app.use("/uploads",express.static("uploads"));
 app.use(`/api/category`, categoryRoutes);
 app.use(`/api/products`, productRoutes);

@@ -77,9 +77,18 @@ cloudinary.config({
 
 
   router.post(`/signup`, async (req, res) => {
-    const { name, phone, email, password, isAdmin } = req.body;
+    const { name, phone, email, password, isAdmin, isVerified } = req.body;
 
     try {
+        // Check if email is verified
+        if (!isVerified) {
+            return res.status(400).json({
+                error: true,
+                msg: "Email Not Verified",
+                details: "Please verify your email address before signing up."
+            });
+        }
+
         // Only check for existing email, remove phone number check
         const existingUserByEmail = await User.findOne({ email: email });
         if (existingUserByEmail) {

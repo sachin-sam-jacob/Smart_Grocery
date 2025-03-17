@@ -25,6 +25,10 @@ const googleProvider = new GoogleAuthProvider();
 const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State to control password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otp, setOtp] = useState("");
   const [formfields, setFormfields] = useState({
     name: "",
     email: "",
@@ -40,9 +44,8 @@ const SignUp = () => {
     phone: "",
     password: "",
     confirmPassword: "", // Add confirm password error
+    otp: "",
   });
-
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Add state for confirm password visibility
 
   const context = useContext(MyContext);
   const history = useNavigate();
@@ -138,7 +141,126 @@ const SignUp = () => {
     }
   };
 
-  const register = (e) => {
+  const sendOTP = async (email) => {
+    try {
+      setIsLoading(true);
+      const response = await postData("/api/otp/send-otp", { email });
+      
+      if (!response.error) {
+        setIsOtpSent(true);
+        Swal.fire({
+          title: '<span style="color: #28a745">OTP Sent!</span>',
+          html: `<div class="custom-success-message">${response.details}</div>`,
+          icon: 'success',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: '#fff',
+          customClass: {
+            popup: 'animated fadeInDown success-popup',
+            title: 'success-title',
+            htmlContainer: 'success-container',
+          },
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        });
+      } else {
+        throw new Error(response.msg);
+      }
+    } catch (error) {
+      Swal.fire({
+        title: `<span style="color: #dc3545">Failed to Send OTP</span>`,
+        html: `<div class="custom-error-message">${error.message}</div>`,
+        icon: 'error',
+        background: '#fff',
+        customClass: {
+          popup: 'animated fadeInDown error-popup',
+          title: 'error-title',
+          htmlContainer: 'error-container',
+        },
+        showConfirmButton: true,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545',
+        padding: '2em',
+        borderRadius: '15px',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyOTP = async () => {
+    try {
+      setIsLoading(true);
+      const response = await postData("/api/otp/verify-otp", {
+        email: formfields.email,
+        otp: parseInt(otp)
+      });
+
+      if (!response.error) {
+        setIsOtpVerified(true);
+        Swal.fire({
+          title: '<span style="color: #28a745">Email Verified!</span>',
+          html: `<div class="custom-success-message">${response.details}</div>`,
+          icon: 'success',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: '#fff',
+          customClass: {
+            popup: 'animated fadeInDown success-popup',
+            title: 'success-title',
+            htmlContainer: 'success-container',
+          },
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        });
+      } else {
+        throw new Error(response.msg);
+      }
+    } catch (error) {
+      Swal.fire({
+        title: `<span style="color: #dc3545">Verification Failed</span>`,
+        html: `<div class="custom-error-message">${error.message}</div>`,
+        icon: 'error',
+        background: '#fff',
+        customClass: {
+          popup: 'animated fadeInDown error-popup',
+          title: 'error-title',
+          htmlContainer: 'error-container',
+        },
+        showConfirmButton: true,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545',
+        padding: '2em',
+        borderRadius: '15px',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (e) => {
     e.preventDefault();
 
     // Check all required fields
@@ -231,6 +353,32 @@ const SignUp = () => {
         return false;
     }
 
+    if (!isOtpVerified) {
+      Swal.fire({
+        title: '<span style="color: #dc3545">Email Not Verified</span>',
+        html: '<div class="custom-error-message">Please verify your email address before signing up.</div>',
+        icon: 'error',
+        background: '#fff',
+        customClass: {
+          popup: 'animated fadeInDown error-popup',
+          title: 'error-title',
+          htmlContainer: 'error-container',
+        },
+        showConfirmButton: true,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545',
+        padding: '2em',
+        borderRadius: '15px',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        }
+      });
+      return;
+    }
+
     // If all validations pass, show confirmation dialog
     Swal.fire({
         title: 'Create Account?',
@@ -253,7 +401,7 @@ const SignUp = () => {
     }).then((result) => {
         if (result.isConfirmed) {
             setIsLoading(true);
-            postData("/api/user/signup", formfields)
+            postData("/api/user/signup", { ...formfields, isVerified: true })
                 .then((res) => {
                     if (!res.error) {
                         Swal.fire({
@@ -534,11 +682,43 @@ const SignUp = () => {
               />
             </div>
 
+            {!isOtpSent ? (
+              <Button
+                type="button"
+                className="btn-blue col btn-lg btn-big mb-3"
+                onClick={() => sendOTP(formfields.email)}
+                disabled={isLoading || !formfields.email || !!errors.email}
+              >
+                {isLoading ? <CircularProgress /> : "Send Verification Code"}
+              </Button>
+            ) : !isOtpVerified ? (
+              <div className="form-group">
+                <TextField
+                  label="Enter Verification Code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  type="text"
+                  variant="standard"
+                  className="w-100"
+                  error={!!errors.otp}
+                  helperText={errors.otp}
+                />
+                <Button
+                  type="button"
+                  className="btn-blue col btn-lg btn-big mt-3"
+                  onClick={verifyOTP}
+                  disabled={isLoading || !otp}
+                >
+                  {isLoading ? <CircularProgress /> : "Verify Code"}
+                </Button>
+              </div>
+            ) : null}
+
             <div className="d-flex align-items-center mt-3 mb-3">
               <Button 
                 type="submit" 
                 className="btn-blue col btn-lg btn-big"
-                disabled={isLoading}
+                disabled={isLoading || !isOtpVerified}
               >
                 {isLoading ? <CircularProgress /> : "Sign Up"}
               </Button>
