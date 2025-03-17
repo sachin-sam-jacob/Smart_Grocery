@@ -43,10 +43,14 @@ cloudinary.config({
           overwrite: false,
         };
   
-        const img = await cloudinary.uploader.upload(
+        await cloudinary.uploader.upload(
           req.files[i].path,
           options,
           function (error, result) {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              return;
+            }
             imagesArr.push(result.secure_url);
             fs.unlinkSync(`uploads/${req.files[i].filename}`);
           }
@@ -58,9 +62,14 @@ cloudinary.config({
       });
   
       imagesUploaded = await imagesUploaded.save();
+      
       return res.status(200).json(imagesArr);
     } catch (error) {
-      console.log(error);
+      console.error("Error in image upload:", error);
+      return res.status(500).json({ 
+        error: true, 
+        msg: "Failed to upload images" 
+      });
     }
   });
   
@@ -307,67 +316,43 @@ router.get(`/get/count`, async (req, res) =>{
 
 
 router.put('/:id',async (req, res)=> {
+    try {
+        const { name, phone, email, images } = req.body;
 
-    const { name, phone, email } = req.body;
+        const userExist = await User.findById(req.params.id);
+        if (!userExist) {
+            return res.status(404).json({ error: true, msg: "User not found" });
+        }
 
-    const userExist = await User.findById(req.params.id);
+        let newPassword = userExist.password;
+        if(req.body.password) {
+            newPassword = bcrypt.hashSync(req.body.password, 10);
+        }
 
-    if(req.body.password) {
-        newPassword = bcrypt.hashSync(req.body.password, 10)
-    } else {
-        newPassword = userExist.passwordHash;
+        // Use the images from the request body, not imagesArr
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                name: name,
+                phone: phone,
+                email: email,
+                password: newPassword,
+                images: images || userExist.images, // Use existing images if none provided
+            },
+            { new: true }
+        );
+
+        if(!user) {
+            return res.status(400).json({ error: true, msg: "The user cannot be updated" });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).json({ error: true, msg: "Server error while updating user" });
     }
+});
 
-    const user = await User.findByIdAndUpdate(
-        req.params.id,
-        {
-            name:name,
-            phone:phone,
-            email:email,
-            password:newPassword,
-            images: imagesArr,
-        },
-        { new: true}
-    )
-
-    if(!user)
-    return res.status(400).send('the user cannot be Updated!')
-
-    res.send(user);
-})
-
-
-// router.put('/:id',async (req, res)=> {
-
-//     const { name, phone, email, password } = req.body;
-
-//     const userExist = await User.findById(req.params.id);
-
-//     let newPassword
-    
-//     if(req.body.password) {
-//         newPassword = bcrypt.hashSync(req.body.password, 10)
-//     } else {
-//         newPassword = userExist.passwordHash;
-//     }
-
-//     const user = await User.findByIdAndUpdate(
-//         req.params.id,
-//         {
-//             name:name,
-//             phone:phone,
-//             email:email,
-//             password:newPassword,
-//             images: imagesArr,
-//         },
-//         { new: true}
-//     )
-
-//     if(!user)
-//     return res.status(400).send('the user cannot be Updated!')
-
-//     res.send(user);
-// })
 
 
 
