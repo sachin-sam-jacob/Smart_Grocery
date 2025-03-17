@@ -3,6 +3,9 @@ const router = express.Router();
 const OpenAI = require('openai');
 const { Product } = require('../models/products');
 
+// Verify the Product model is properly imported
+console.log('Product model imported:', !!Product);
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
@@ -58,33 +61,41 @@ const matchCommand = (input, patterns) => {
 const searchProducts = async (searchTerm) => {
     try {
         const cleanSearchTerm = searchTerm.trim().toLowerCase();
+        console.log("Searching for term:", cleanSearchTerm);
         
-        // Try exact match first
+        // Create search criteria
+        const searchCriteria = {
+            $or: [
+                { name: { $regex: cleanSearchTerm, $options: 'i' } },
+                { description: { $regex: cleanSearchTerm, $options: 'i' } },
+                { category: { $regex: cleanSearchTerm, $options: 'i' } }
+            ]
+        };
+
+        console.log("Search criteria:", JSON.stringify(searchCriteria));
+
+        // First try exact match
         let products = await Product.find({
             name: new RegExp(`\\b${cleanSearchTerm}\\b`, 'i')
         })
         .select('name description price images category countInStock')
-        .limit(20)
-        .sort({ name: 1 });
+        .limit(20);
 
-        // If no exact matches, try partial match
+        console.log(`Found ${products.length} exact matches`);
+
+        // If no exact matches, try partial matches
         if (products.length === 0) {
-            products = await Product.find({
-                $or: [
-                    { name: { $regex: cleanSearchTerm, $options: 'i' } },
-                    { description: { $regex: cleanSearchTerm, $options: 'i' } },
-                    { category: { $regex: cleanSearchTerm, $options: 'i' } }
-                ]
-            })
-            .select('name description price images category countInStock')
-            .limit(20)
-            .sort({ name: 1 });
+            products = await Product.find(searchCriteria)
+                .select('name description price images category countInStock')
+                .limit(20);
+            
+            console.log(`Found ${products.length} partial matches`);
         }
 
         return products;
     } catch (error) {
         console.error('Search error:', error);
-        return [];
+        throw error;
     }
 };
 
@@ -93,6 +104,14 @@ router.post('/process', async (req, res) => {
     try {
         const { command } = req.body;
         console.log('Received command:', command);
+        
+        if (!command) {
+            return res.status(400).json({
+                success: false,
+                message: 'Command is required'
+            });
+        }
+        
         const commandLower = command.toLowerCase();
 
         // Help command
@@ -121,9 +140,9 @@ router.post('/process', async (req, res) => {
 
         // Search commands
         if (COMMAND_PATTERNS.SEARCH.patterns.some(pattern => commandLower.includes(pattern))) {
-            const searchTerm = commandLower
-                .replace(new RegExp(COMMAND_PATTERNS.SEARCH.patterns.join('|'), 'i'), '')
-                .trim();
+            // Extract search term using regex to handle different command formats
+            const searchPattern = new RegExp(COMMAND_PATTERNS.SEARCH.patterns.join('|'), 'i');
+            const searchTerm = commandLower.replace(searchPattern, '').trim();
             
             if (!searchTerm) {
                 return res.json({
@@ -133,15 +152,28 @@ router.post('/process', async (req, res) => {
                 });
             }
 
-            const products = await searchProducts(searchTerm);
-            return res.json({
-                intent: 'search',
-                searchTerm: searchTerm,
-                message: products.length > 0 
-                    ? COMMAND_PATTERNS.SEARCH.responseTemplate(searchTerm, products.length)
-                    : `No products found for "${searchTerm}". Try a different search term.`,
-                products: products
-            });
+            console.log('Searching for:', searchTerm);
+
+            try {
+                const products = await searchProducts(searchTerm);
+                console.log(`Found ${products.length} products for "${searchTerm}"`);
+
+                return res.json({
+                    intent: 'search',
+                    searchTerm,
+                    message: products.length > 0 
+                        ? `Found ${products.length} products matching "${searchTerm}"`
+                        : `No products found for "${searchTerm}". Try a different search term.`,
+                    products: products
+                });
+            } catch (searchError) {
+                console.error('Search error:', searchError);
+                return res.status(500).json({
+                    intent: 'search',
+                    message: 'Error searching for products',
+                    error: searchError.message
+                });
+            }
         }
 
         // Cart commands

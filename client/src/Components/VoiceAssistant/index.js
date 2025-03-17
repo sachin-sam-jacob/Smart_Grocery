@@ -235,37 +235,57 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
       }
 
       // Improved search command handling
-      if (command.includes('search') || command.includes('find')) {
-        const searchTerm = command.replace(/(search for|search|find)/i, '').trim();
+      if (command.includes('search for') || command.includes('find') || command.includes('search')) {
+        let searchTerm = command
+          .replace(/(search for|search|find)/gi, '')
+          .trim();
+
         if (!searchTerm) {
           setResponse('What would you like to search for?');
           return;
         }
 
+        setResponse(`Searching for "${searchTerm}"...`);
+        
         try {
-          setResponse(`Searching for ${searchTerm}...`);
-          
-          // Use the search API endpoint instead of voice-assistant process
-          const searchResponse = await postData('/api/search', {
-            searchTerm: searchTerm
+          const data = await postData('/api/voice-assistant/process', {
+            command: `search for ${searchTerm}`
           });
+          
+          console.log('Search response:', data);
 
-          if (searchResponse && searchResponse.length > 0) {
-            setResponse(`Found ${searchResponse.length} products matching "${searchTerm}"`);
-            // Store search results in context or local storage if needed
-            localStorage.setItem('searchResults', JSON.stringify(searchResponse));
-            setTimeout(() => {
-              navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
-            }, 1500);
+          if (data.products && data.products.length > 0) {
+            setResponse(`Found ${data.products.length} products matching "${searchTerm}"`);
+            
+            // Store search results in localStorage with proper formatting
+            try {
+              localStorage.setItem('voiceSearchResults', JSON.stringify({
+                term: searchTerm,
+                results: data.products,
+                timestamp: new Date().getTime()
+              }));
+              
+              console.log('Search results stored in localStorage');
+              
+              // Navigate to search page with query parameter
+              setTimeout(() => {
+                navigate(`/search?q=${encodeURIComponent(searchTerm)}&source=voice`);
+              }, 1500);
+            } catch (storageError) {
+              console.error('Error storing search results:', storageError);
+              // Still navigate even if storage fails
+              setTimeout(() => {
+                navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+              }, 1500);
+            }
           } else {
             setResponse(`No products found for "${searchTerm}". Try a different search term.`);
           }
-          return;
         } catch (error) {
           console.error('Search error:', error);
-          setResponse('Sorry, there was an error performing the search.');
-          return;
+          setResponse('Sorry, there was an error performing the search. Please try again.');
         }
+        return;
       }
 
       if (command.includes('cart')) {
