@@ -56,15 +56,15 @@ router.get('/:id', async (req, res) => {
 const transporter = nodemailer.createTransport({
     service: 'gmail', // You can change this to your email provider
     auth: {
-        user: process.env.EMAIL, // Your email address
-        pass: process.env.PASSWORD // Your email password or app password
+        user: process.env.EMAIL_USER, // Your email address
+        pass: process.env.EMAIL_PASSWORD // Your email password or app password
     }
 });
 
 // Function to send email notification
 const sendEmail = (email, reason,name) => {
     const mailOptions = {
-        from: process.env.EMAIL,
+        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Account Blocked Notification - Smart Grocery',
         text: `Dear ${name},

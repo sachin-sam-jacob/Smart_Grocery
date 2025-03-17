@@ -1,0 +1,113 @@
+0e3b9536 Add OTP verification feature to SignUp process. Implement email OTP sending and verification routes on the server. Update SignUp component to handle OTP state and integrate verification checks before user registration. Enhance user feedback with SweetAlert notifications for OTP actions.
+c0bc3c22 Refactor voice assistant and chatbot styles for improved layout and interaction. Update positioning and z-index values to enhance clickability and prevent overlap. Adjust styles for better responsiveness and user experience.
+17f06a72 Enhance MyAccount page functionality by implementing user data loading, image upload handling, and immediate profile updates. Integrate SweetAlert for user notifications and improve error handling during image uploads. Update server routes to support image management and user profile updates with better error responses.
+81d2bf84 Refactor chatbot and assistant styles for improved layout and interaction. Adjust z-index values to prevent overlap, enhance button clickability, and implement slide-in animation for the chat window. Update server model to use "gemini-2.0-flash" for better response generation.
+9502984d Enhance voice assistant search functionality by improving command handling, storing search results in localStorage, and updating search page to utilize voice search data. Refactor search logic in server to support better search criteria and error handling.
+412560eb Add supplier management routes and integrate supplier dashboard metrics in the application
+7dd71e28 Add comprehensive reporting module with sales, inventory, supplier, and custom reports
+48d9be39 Implement pincode-based product delivery validation in checkout process
+5d2aa1bb Add Gunicorn to requirements and update server startup script
+709bacff Enhance Python server startup script with robust error handling and environment support
+58c4f310 Update start_server.sh to use python3 for virtual environment creation
+8e535e93 Add Procfile and update start_server.sh for production deployment
+d06cc797 Update Python server startup script to use generic 'python' command
+d5da17b6 Update Python server startup script and package.json configuration
+8c20334b Update .gitignore and package.json for server configuration
+41342a9c hosting server 1
+01a3cdb3 server hosting
+9be7422a made changes in pazkage.json for hosting in server
+0349aa88 made changes in package.json for hosting server
+c1c9f773 made changes in start|_server.sh in server side
+d2ae14bc made changes in start_server.sh in server side
+1b8a3c69 made changes in package.json in server side
+0c9aa14a made changes in package.json in server side for hosting
+916f69df made changes in client package.json for hosting purpose
+a69fd3e8 made changes in the supplier product update functionality.
+2be6ae7c made changes in supplier module(stock quantity update in supplier products table)
+ad392dca made changes in gemini api
+891a4f2a made some changes in faceRecognition
+00aa80e1 added FCEID RECOGNITION in login,added models for it
+4a7b4be2 added back to homepage button in signin and signup page
+3493efc0 made changes in the design of signin and signup pages
+dde3ba34 made changes in client module.added message alert change from alertbox to sweetalert2
+2b2e25af restricted voice assistant and chatbot appearing in login,signup pages,etc...
+9134d700 made changes in forgot password,resetpassword,verify code and changed variable name in forgotpassword route(email,password)
+39026a39 fixed the error in admin page and changed message alert in login and logout
+c222ade1 made changes in blocked user functionality in admin(error fixed)
+fd9704ed Added Dynamic Pricing Functionality
+41af7fcf added advanced search functionality
+1e57bd44 product view functionality in visual search fixed and working
+f578b703 balance datas to be committed(Visual Search)
+45febdef added visual search functionality and trained and tested model for fruit and vegetable detection
+b99e12b0 made changes to error in quantity change in cart
+402531e4 Added main project documentations
+cbb47b8b chatbot functionality added
+58046cde added AI BASED PRODUCT DESCRIPTION FUNTIONALITY
+cd79f6f6 invoice download fucntionality added in DOM mod.(stock order payment)
+9406c2e8 pay all functionality done in DOM mod.stock order payment
+f7670f87 payment done in stock oder on DOM mod and completed order history page in Supplier
+313dcd39 stock management and payment order display done.payment yet to be done
+0347dedc stock order page in supplier price added
+9468a6f2 made orders in stock manager working
+499c8921 made changes in product management
+c930d534 product management added in supplier mod.
+8ed406b2 made changes
+0f489d9c AUTO ORDER enable and disable functionalities done
+e1e228d4 made changes in stock order
+67f272ec order history page done and made changes in the style in dashboard, order history and stock overview pages
+14568433 stock order done
+5e40ac01 stock overview done
+5abf7993 added stock management functionality in DOM module.Stock overview and stock alert done (some funtionalites yet to be finished)
+6a151f8c Added Supplier module
+beb2f6e1 Added Reciepe Generator and Add supplier and manage supplier in District Operation manager page
+a675aaa6 ADDED SCRUM SCHEET IN DOCUMENTATION
+67b05ff9 ADDED MINI PROJECT REPORT+GIT LOG AND PPT
+9b16ffbb made changes in package.json(DOM) for hosting purpose
+0e1a9c84 made change in admin login page
+e310a791 made changes in package.json(admin) for hosting purpose
+b6f2760d made changes in package.json ,final project report,editproduct and add product in DOM
+021903b7 added render.yaml file
+c205cafd Made changes to password bcrypt in forgot password,chnaged the styles of signup,login validation from homepage,pincode check in location header
+fc481be7 edited package.json(server) for hosting
+6c1b5563 render.yaml added in server
+9bcc5474 made changes in the session
+f3d8b132 added district operation manager management to admin,added a preloader,made new sidebar for search result
+86b132dd added new user stock manager
+b29249d0 made changes in addtocart message display
+96f063b2 added review and cancel order functionality(completed)
+1a5aa040 made changes in the product listt in admin.added countinstock and location
+f971e965 added districts.js in admin and client,changed the location from countries to states(admin and client)
+9bfa58a8 added a link to go back to homepage from loginpage
+4deebb9e removed add review from productDetails page
+9b919db0 made change in out of stock fucntionality.if the product is in out of stock quantity box and add to cart options will not be available
+51ab2eab changed the style of products listed in orders ,changed the format of invoice and removed the printing of products in products.j(server for testing)
+5c575256 added env in gitignore(admin)
+648bd07c added env in gitignore(server)
+97eb1db6 added env in gitignore
+a5c0c65e added some styles in signup and changes in redirect to admin from user login
+b85bd39f made  changes in productDetails,api.js(added fetchDataApi),server.js(added orders),added api for order to be listed,added backend code for filterbyprice in Product.js
+680b07f6 added download invoice option in orders
+c81aac1e listing of products based on category,filter by price and rating error has been fixed
+aed4ba4c made changes in checkout (added upi)
+233b2ee7 added invoice component in App.js
+4f8f0cfe html2canvas added for reciept printing
+3e27f3c4 made the same delete to out of stock in products list(admin)
+8800dc9e made changes in delete a product in admin(delete=Out of stock) and also fixed the count of review
+11196ff6 added update stock to product.js in server.made changes in mylist model(added and removed attribute),added validation in cart when product removed added to wishlist.made changes in mylist.js (routes),
+3c948cfc changed api.js(res->data),added new attribute in cart model
+e6b5c29a added weight to Productdetails and cart
+f56aee3c made changes in cart and productitem page (Completed)
+36dba950 PRODUCT REMOVED FROM CART ADDED TO WISHLIST(COMPLETED)
+78c8ca35 List user and Block user functionalities completed(ADMIN SIDE)
+a6cbb275 Added Functionality of blocking and unblocking user by admin
+cb3977f9 made changes in the Signin and users model(Blocked Users )
+05b982d0 list user in manage user in admin (DONE)
+4f7e40b7 added abstract to documentation
+d545c655 Made changes in manage user in admin"(code working)
+08e5bef5 made chages to manage user in admin dashboard(not finished)
+9edb04d4 Added Documentation and added Manage user functionality to admin(only dropdown list.code need to be done)
+f6567253 Made changes in Login and Signup of Admin
+dd9982fb Made changes to Additional Info(ProductDetails)
+1fbb4c2a made changes in Header
+5629e530 Second Commit(Deleted Images)
+3e73bbb6 First Commit
