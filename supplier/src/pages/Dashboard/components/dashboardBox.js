@@ -1,72 +1,84 @@
-
-import { HiDotsVertical } from "react-icons/hi";
-import Button from '@mui/material/Button';
+import { Box, Paper, Typography, Skeleton } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import { useState } from "react";
-import { IoIosTimer } from "react-icons/io";
 
-
-const DashboardBox = (props) => {
-
-    const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
-
-    const ITEM_HEIGHT = 48;
-
-
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
+const DashboardBox = ({ title, count, icon, color, grow, prefix = "", isLoading }) => {
+    const formatNumber = (num) => {
+        return num?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0";
     };
 
     return (
-        <Button className="dashboardBox" style={{
-            backgroundImage:
-                `linear-gradient(to right, ${props.color?.[0]} , ${props.color?.[1]})`
-        }}>
-
-            {
-                props.grow === true ?
-
-                    <span className="chart"><TrendingUpIcon /></span>
-
-                    :
-
-                    <span className="chart"><TrendingDownIcon /></span>
+        <Paper sx={{
+            background: `linear-gradient(135deg, ${color[0]} 0%, ${color[1]} 100%)`,
+            borderRadius: '16px',
+            padding: '24px',
+            height: '100%',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            transition: 'transform 0.2s ease-in-out',
+            '&:hover': {
+                transform: 'translateY(-5px)'
             }
+        }}>
+            <Box sx={{
+                position: 'absolute',
+                top: '50%',
+                right: '-20px',
+                transform: 'translateY(-50%)',
+                opacity: 0.2,
+                fontSize: '120px'
+            }}>
+                {icon}
+            </Box>
 
-            <div className="d-flex w-100">
-                <div className="col1">
-                    <h4 className="text-white mb-0">{props.title}</h4>
-                    <span className="text-white">{props.count>0 ? props.count : 0}</span>
-                </div>
+            <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <Typography variant="h6" sx={{
+                    color: '#fff',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    mb: 2,
+                    opacity: 0.9
+                }}>
+                    {title}
+                </Typography>
 
-                <div className="ml-auto">
-                    {
-                        props.icon ?
-                            <span span className="icon">
-                                {props.icon ? props.icon : ''}
-                            </span>
+                {isLoading ? (
+                    <Skeleton 
+                        variant="text" 
+                        width="60%" 
+                        sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} 
+                    />
+                ) : (
+                    <Typography variant="h4" sx={{
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '28px',
+                        mb: 1
+                    }}>
+                        {prefix}{formatNumber(count)}
+                    </Typography>
+                )}
 
-                            :
-
-                            ''
-                    }
-
-                </div>
-            </div>
-
-
-           
-
-
-        </Button >
-    )
-}
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    color: '#fff',
+                    opacity: 0.9
+                }}>
+                    {grow ? (
+                        <TrendingUpIcon sx={{ fontSize: 20 }} />
+                    ) : (
+                        <TrendingDownIcon sx={{ fontSize: 20 }} />
+                    )}
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {grow ? '+10%' : '-5%'} vs last month
+                    </Typography>
+                </Box>
+            </Box>
+        </Paper>
+    );
+};
 
 export default DashboardBox;

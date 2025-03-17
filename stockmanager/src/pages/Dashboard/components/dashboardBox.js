@@ -1,4 +1,3 @@
-
 import { HiDotsVertical } from "react-icons/hi";
 import Button from '@mui/material/Button';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -8,14 +7,17 @@ import MenuItem from '@mui/material/MenuItem';
 import { useState } from "react";
 import { IoIosTimer } from "react-icons/io";
 
-
-const DashboardBox = (props) => {
+const DashboardBox = ({ color, icon, title, count, grow = false }) => {
+    // Format the count with commas for better readability
+    const formatCount = (value) => {
+        if (value === undefined || value === null) return '0';
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
 
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
     const ITEM_HEIGHT = 48;
-
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -25,48 +27,39 @@ const DashboardBox = (props) => {
     };
 
     return (
-        <Button className="dashboardBox" style={{
-            backgroundImage:
-                `linear-gradient(to right, ${props.color?.[0]} , ${props.color?.[1]})`
-        }}>
-
-            {
-                props.grow === true ?
-
-                    <span className="chart"><TrendingUpIcon /></span>
-
-                    :
-
-                    <span className="chart"><TrendingDownIcon /></span>
-            }
+        <Button 
+            className="dashboardBox" 
+            style={{
+                backgroundImage: `linear-gradient(to right, ${color?.[0] || '#000'}, ${color?.[1] || '#000'})`,
+                cursor: 'default'  // Remove pointer cursor since it's not clickable
+            }}
+        >
+            {typeof grow === 'boolean' && (
+                <span className="chart">
+                    {grow ? <TrendingUpIcon /> : <TrendingDownIcon />}
+                </span>
+            )}
 
             <div className="d-flex w-100">
                 <div className="col1">
-                    <h4 className="text-white mb-0">{props.title}</h4>
-                    <span className="text-white">{props.count>0 ? props.count : 0}</span>
+                    <h4 className="text-white mb-0">
+                        {title || 'Unknown'}
+                    </h4>
+                    <span className="text-white" style={{ fontSize: '1.5rem' }}>
+                        {formatCount(count)}
+                    </span>
                 </div>
 
-                <div className="ml-auto">
-                    {
-                        props.icon ?
-                            <span span className="icon">
-                                {props.icon ? props.icon : ''}
-                            </span>
-
-                            :
-
-                            ''
-                    }
-
-                </div>
+                {icon && (
+                    <div className="ml-auto">
+                        <span className="icon">
+                            {icon}
+                        </span>
+                    </div>
+                )}
             </div>
-
-
-           
-
-
-        </Button >
-    )
-}
+        </Button>
+    );
+};
 
 export default DashboardBox;

@@ -20,7 +20,7 @@ router.post('/generate-description', async (req, res) => {
         Please make it engaging and informative for an e-commerce grocery store.`;
 
         // Generate content using Gemini AI
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const description = response.text();

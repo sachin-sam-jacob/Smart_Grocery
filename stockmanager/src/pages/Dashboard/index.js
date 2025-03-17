@@ -82,25 +82,46 @@ const Dashboard = () => {
         }
     }, []);
 
-    // New function to fetch initial data
-    const fetchInitialData = (location) => {
-        fetchProducts(1, showBy, categoryVal, location);
+    // Updated function to fetch initial data with proper error handling
+    const fetchInitialData = async (location) => {
+        try {
+            // Fetch products count
+            const productsResponse = await fetchDataFromApi(`/api/product/get/count/${location}`);
+            if (productsResponse && productsResponse.productsCount !== undefined) {
+                setTotalProducts(productsResponse.productsCount);
+            }
 
-        fetchDataFromApi(`/api/product/get/count/${location}`).then((res) => {
-            setTotalProducts(res.productsCount);
-        });
+            // Fetch orders count with status filter
+            const ordersResponse = await fetchDataFromApi(`/api/orders/get/count/${location}`);
+            if (ordersResponse && ordersResponse.orderCount !== undefined) {
+                setTotalOrders(ordersResponse.orderCount);
+            }
 
-        fetchDataFromApi(`/api/orders/get/count/${location}`).then((res) => {
-            setTotalOrders(res.orderCount);
-        });
+            // Fetch reviews count
+            const reviewsResponse = await fetchDataFromApi(`/api/productReviews/get/count/${location}`);
+            if (reviewsResponse && reviewsResponse.count !== undefined) {
+                setTotalProductsReviews(reviewsResponse.count);
+            }
 
-        fetchDataFromApi(`/api/productReviews/get/count/${location}`).then((res) => {
-            setTotalProductsReviews(res.count);
-        });
+            // Fetch total sales
+            const salesResponse = await fetchDataFromApi(`/api/orders/sales/${location}`);
+            if (salesResponse && salesResponse.totalSales !== undefined) {
+                setTotalSales(salesResponse.totalSales);
+            }
 
-        fetchDataFromApi(`/api/orders/sales/${location}`).then((res) => {
-            setTotalSales(res.totalSales);
-        });
+            // Fetch products list
+            fetchProducts(1, showBy, categoryVal, location);
+            
+            context.setProgress(100);
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+            context.setAlertBox({
+                open: true,
+                error: true,
+                msg: 'Error loading dashboard data'
+            });
+            context.setProgress(100);
+        }
     };
 
     const fetchProducts = (page, perPage, category = 'all', location = stockmanagerLocation) => {
@@ -174,39 +195,55 @@ const Dashboard = () => {
                 <div className="row dashboardBoxWrapperRow dashboard_Box dashboardBoxWrapperRowV2">
                     <div className="col-md-12">
                         <div className="dashboardBoxWrapper d-flex">
-                            <DashboardBox color={["#c012e2", "#eb64fe"]} icon={<IoMdCart />}
-                                title="Total Orders" count={totalOrders} />
-                            <DashboardBox color={["#2c78e5", "#60aff5"]} icon={<MdShoppingBag />} title="Total Products" count={totalProducts} />
-                            <DashboardBox color={["#e1950e", "#f3cd29"]} icon={<GiStarsStack />} title="Total Reviews" count={totalProductsReviews} />
-                        </div>
-                    </div>
-
-
-                    <div className="col-md-4 pl-0 d-none">
-                        <div className="box graphBox">
-                            <div className="d-flex align-items-center w-100 bottomEle">
-                                <h6 className="text-white mb-0 mt-0">Total Sales</h6>
-
-                            </div>
-
-                            <h3 className="text-white font-weight-bold">{totalSales?.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</h3>
-
-                            <Chart
-                                chartType="PieChart"
-                                width="100%"
-                                height="170px"
-                                data={data}
-                                options={options}
+                            <DashboardBox 
+                                color={["#c012e2", "#eb64fe"]} 
+                                icon={<IoMdCart />}
+                                title="Total Orders" 
+                                count={totalOrders || 0}
+                                grow={true} 
                             />
-
+                            <DashboardBox 
+                                color={["#2c78e5", "#60aff5"]} 
+                                icon={<MdShoppingBag />} 
+                                title="Total Products" 
+                                count={totalProducts || 0}
+                                grow={totalProducts > 0} 
+                            />
+                            <DashboardBox 
+                                color={["#e1950e", "#f3cd29"]} 
+                                icon={<GiStarsStack />} 
+                                title="Total Reviews" 
+                                count={totalProductsReviews || 0}
+                                grow={totalProductsReviews > 0} 
+                            />
                         </div>
                     </div>
 
-
+                    {totalSales > 0 && (
+                        <div className="col-md-4 pl-0">
+                            <div className="box graphBox">
+                                <div className="d-flex align-items-center w-100 bottomEle">
+                                    <h6 className="text-white mb-0 mt-0">Total Sales</h6>
+                                </div>
+                                <h3 className="text-white font-weight-bold">
+                                    {totalSales?.toLocaleString('en-US', { 
+                                        style: 'currency', 
+                                        currency: 'INR',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
+                                    })}
+                                </h3>
+                                <Chart
+                                    chartType="PieChart"
+                                    width="100%"
+                                    height="170px"
+                                    data={data}
+                                    options={options}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
-
-
-
 
                 <div className="card shadow border-0 p-3 mt-4">
                     <h3 className="hd">Best Selling Products</h3>

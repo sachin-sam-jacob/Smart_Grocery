@@ -6,18 +6,18 @@ import { FaCartArrowDown } from "react-icons/fa6";
 import { MdMessage } from "react-icons/md";
 import { FaBell } from "react-icons/fa6";
 import { IoIosSettings } from "react-icons/io";
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useContext, useState, useEffect } from 'react';
 import { IoMdLogOut } from "react-icons/io";
 import { MyContext } from '../../App';
 import { FaClipboardCheck } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
 import { FaWarehouse } from "react-icons/fa"; // New import for Stock Manager icon
 import { FaMapMarkerAlt } from "react-icons/fa"; // New import for Manage Pincode icon
 import { MdShoppingBag } from "react-icons/md";
 import { IoMdCart } from "react-icons/io";
 import { IoCartOutline } from "react-icons/io5"; // Add this import for the stock orders icon
 import { MdInventory } from "react-icons/md"; // Add this import for Product Management icon
+import Swal from 'sweetalert2';
 
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -26,7 +26,7 @@ const Sidebar = () => {
     const [location, setLocation] = useState(''); // State for location
 
     const context = useContext(MyContext);
-    const history = useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem("user");
@@ -42,7 +42,7 @@ const Sidebar = () => {
             }
         }
         else {
-            history("/login");
+            navigate("/login");
         }
     }, []);
 
@@ -51,16 +51,33 @@ const Sidebar = () => {
         setIsToggleSubmenu(!isToggleSubmenu)
     }
 
-    const logout = () => {
-        localStorage.clear();
-        context.setAlertBox({
-            open: true,
-            error: false,
-            msg: "Logout successful"
+    const logout = async () => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of the system!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, logout!'
         });
-        setTimeout(() => {
-            history("/login");
-        }, 2000);
+
+        if (result.isConfirmed) {
+            // Clear local storage
+            localStorage.clear();
+            
+            // Show success message
+            await Swal.fire({
+                title: 'Logged Out!',
+                text: 'You have been successfully logged out.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // Navigate to login page
+            window.location.href = "/login";
+        }
     }
 
     const locationStyle = {
@@ -91,7 +108,7 @@ const Sidebar = () => {
     };
 
     const handleNavigation = (path, index) => {
-        history(path);
+        navigate(path);
         setActiveTab(index);
     }
 
@@ -132,12 +149,12 @@ const Sidebar = () => {
                         Product Management
                     </Button>
                 </li>
-                <li>
+                {/* <li>
                     <Button className={`w-100 ${activeTab === 4 ? 'active' : ''}`} onClick={() => handleNavigation('/communications', 4)}>
                         <span className='icon'><MdMessage /></span>
                         District Manager Chat
                     </Button>
-                </li>
+                </li> */}
 
                 <div className='logoutWrapper'>
                     <div className='logoutBox'>

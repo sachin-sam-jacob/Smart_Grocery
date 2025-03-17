@@ -8,6 +8,7 @@ const axios = require('axios');
 const schedulePriceUpdates = require('./utils/priceUpdateScheduler');
 const faceRecognitionRoutes = require('./routes/faceRecognition');
 const reportsRoutes = require('./routes/reports');
+const supplierRoutes = require('./routes/supplier');
 
 
 app.use(cors());
@@ -85,6 +86,7 @@ app.use('/api/visual-search', visualSearchRoutes);
 app.use('/api/dynamic-pricing', dynamicPricingRoutes);
 app.use('/api/face', faceRecognitionRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/supplier', supplierRoutes);
 
 
 // Add this before your routes

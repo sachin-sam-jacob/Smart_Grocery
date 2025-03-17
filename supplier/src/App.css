@@ -790,3 +790,88 @@ body.dark .supplier-name {
     margin-right: 8px;
 }
 
+/* Dashboard specific styles */
+.dashboard-container {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+body.dark .dashboard-container {
+    background-color: #071739;
+}
+
+.dashboard-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.chart-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+body.dark .chart-container {
+    background: #112143;
+}
+
+.stats-number {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.stats-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 500;
+}
+
+body.dark .stats-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.trend-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.trend-up {
+    color: #4caf50;
+}
+
+.trend-down {
+    color: #f44336;
+}
+
+/* Loading animations */
+.skeleton-box {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.1)
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
