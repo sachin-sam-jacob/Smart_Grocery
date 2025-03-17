@@ -38,6 +38,17 @@ const pulse = keyframes`
   }
 `;
 
+const slideIn = keyframes`
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
 const StyledFab = styled(Fab)(({ theme, isOpen }) => ({
     background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
     boxShadow: '0 3px 15px rgba(33, 150, 243, 0.3)',
@@ -51,16 +62,23 @@ const StyledFab = styled(Fab)(({ theme, isOpen }) => ({
 
 const ChatWindow = styled(Paper)(({ theme }) => ({
     position: 'fixed',
-    bottom: '80px',
+    bottom: '160px',
     right: '20px',
     width: '350px',
     height: '500px',
     display: 'flex',
     flexDirection: 'column',
-    zIndex: 1000,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-    borderRadius: '12px',
-    overflow: 'hidden'
+    borderRadius: '15px',
+    overflow: 'hidden',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+    zIndex: 9996,
+    animation: `${slideIn} 0.3s ease-out`,
+    [theme.breakpoints.down('sm')]: {
+        width: '90vw',
+        height: '70vh',
+        bottom: '160px',
+        right: '5vw',
+    }
 }));
 
 const ChatHeader = styled(Box)(({ theme }) => ({
@@ -151,33 +169,32 @@ const predefinedQuestions = [
     "Delivery options"
 ];
 
-const QuoteBox = styled(Box)(({ theme }) => ({
+const QuoteBox = styled(Paper)(({ theme }) => ({
     position: 'fixed',
-    bottom: '85px',
-    right: '30px',
-    padding: '12px 20px',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '20px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-    zIndex: 999,
-    width: '250px',
-    animation: `${fadeInUp} 0.5s ease`,
-    border: '1px solid rgba(25, 118, 210, 0.1)',
+    bottom: '160px',
+    right: '20px',
+    padding: '10px 15px',
+    borderRadius: '15px',
+    maxWidth: '280px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    animation: `${fadeIn} 0.5s ease-in-out`,
+    zIndex: 9996,
+    pointerEvents: 'none',
     '&::after': {
         content: '""',
         position: 'absolute',
-        bottom: '-8px',
-        right: '28px',
-        width: '16px',
-        height: '16px',
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        bottom: '-10px',
+        right: '20px',
+        width: '20px',
+        height: '20px',
+        backgroundColor: 'white',
         transform: 'rotate(45deg)',
-        borderRight: '1px solid rgba(25, 118, 210, 0.1)',
-        borderBottom: '1px solid rgba(25, 118, 210, 0.1)',
+        boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.1)',
+        zIndex: -1
     }
 }));
 
-const fadeInUp = keyframes`
+const fadeIn = keyframes`
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -324,9 +341,11 @@ const Chatbot = () => {
                     }}
                     sx={{
                         position: 'fixed',
-                        bottom: '20px',
+                        bottom: '80px',
                         right: '20px',
-                        zIndex: 1000,
+                        zIndex: 9997,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
                     }}
                 >
                     {isOpen ? (

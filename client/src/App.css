@@ -700,10 +700,12 @@ color: #000;}
 
 /* Update chatbot styles if needed */
 .chatbot-container {
-  z-index: 9999;
+  z-index: 9998; /* Slightly lower than voice assistant to prevent overlap issues */
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative; /* Ensure position context */
+  
 }
 
 .app-container {
@@ -713,13 +715,19 @@ color: #000;}
 
 .assistants-container {
   position: fixed;
-  bottom: 20px;
+  bottom: 80px;
   right: 20px;
   z-index: 9999;
   display: flex;
   gap: 15px;
   align-items: center;
   justify-content: flex-end;
+  pointer-events: none; /* This allows clicks to pass through the container */
+}
+
+/* Make individual assistants clickable */
+.assistants-container > * {
+  pointer-events: auto; /* This makes each child element clickable */
 }
 
 /* Voice Assistant Styles */
@@ -821,4 +829,11 @@ color: #000;}
 .voice-assistant-container button,
 .chatbot-container button {
   transition: all 0.3s ease-in-out !important;
+}
+
+/* Ensure chatbot button is clickable */
+.chatbot-container .MuiFab-root {
+  position: relative !important;
+  z-index: 9997 !important;
+  cursor: pointer !important;
 }

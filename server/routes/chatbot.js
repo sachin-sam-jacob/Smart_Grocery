@@ -70,7 +70,7 @@ router.post('/chat', async (req, res) => {
         User message: ${message}
         Please provide a helpful, friendly response related to grocery shopping, products, or nutrition. Keep responses concise and practical.`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await model.generateContent(prompt);
         const response = result.response.text();
 
