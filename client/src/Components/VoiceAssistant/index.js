@@ -16,9 +16,6 @@ Available commands:
 `;
 
 const VoiceButton = styled(IconButton)`
-  position: fixed;
-  bottom: 20px;
-  right: 85px;
   background: linear-gradient(45deg, #0BDA51, #17863c) !important;
   color: white !important;
   z-index: 9998 !important;

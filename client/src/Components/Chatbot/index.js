@@ -62,7 +62,7 @@ const StyledFab = styled(Fab)(({ theme, isOpen }) => ({
 
 const ChatWindow = styled(Paper)(({ theme }) => ({
     position: 'fixed',
-    bottom: '160px',
+    bottom: '100px',
     right: '20px',
     width: '350px',
     height: '500px',
@@ -76,7 +76,7 @@ const ChatWindow = styled(Paper)(({ theme }) => ({
     [theme.breakpoints.down('sm')]: {
         width: '90vw',
         height: '70vh',
-        bottom: '160px',
+        bottom: '100px',
         right: '5vw',
     }
 }));
@@ -171,7 +171,7 @@ const predefinedQuestions = [
 
 const QuoteBox = styled(Paper)(({ theme }) => ({
     position: 'fixed',
-    bottom: '160px',
+    bottom: '100px',
     right: '20px',
     padding: '10px 15px',
     borderRadius: '15px',
@@ -292,7 +292,7 @@ const Chatbot = () => {
     };
 
     return (
-        <>
+        <div className="chatbot-container">
             {!isOpen && (
                 <Zoom in={true}>
                     <QuoteBox 
@@ -340,10 +340,6 @@ const Chatbot = () => {
                         setIsOpen(!isOpen);
                     }}
                     sx={{
-                        position: 'fixed',
-                        bottom: '80px',
-                        right: '20px',
-                        zIndex: 9997,
                         cursor: 'pointer',
                         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
                     }}
@@ -449,7 +445,7 @@ const Chatbot = () => {
                     </Box>
                 </ChatWindow>
             </Collapse>
-        </>
+        </div>
     );
 };
 
