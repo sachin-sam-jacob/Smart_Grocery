@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "start-python": "cd python_server && bash start_server.sh",
-    "dev": "concurrently \"npm start\" \"npm run start-python\"",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
