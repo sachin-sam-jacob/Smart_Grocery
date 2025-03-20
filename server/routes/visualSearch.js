@@ -23,7 +23,6 @@ const upload = multer({
   }
 }).single('image');
 
-const PYTHON_SERVER_URL = 'http://localhost:5000';
 
 const bufferToStream = (buffer) => {
   const readable = new stream.Readable();
@@ -73,9 +72,9 @@ router.post('/analyze', (req, res) => {
         filename: req.file.originalname,
         contentType: req.file.mimetype
       });
-
+      console.log("Sending to Python server",process.env.PYTHON_SERVER_URL);
       // Send to Python server
-      const pythonResponse = await axios.post(`${PYTHON_SERVER_URL}/analyze`, formData, {
+      const pythonResponse = await axios.post(`${process.env.PYTHON_SERVER_URL}/analyze`, formData, {
         headers: {
           ...formData.getHeaders(),
           'Accept': 'application/json'
