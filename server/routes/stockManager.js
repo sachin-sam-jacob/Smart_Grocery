@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const { SupplierProduct } = require('../models/supplierProduct');
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
@@ -205,27 +206,56 @@ router.put('/supplier-status/:id', async (req, res) => {
         const { id } = req.params;
         const { isActive } = req.body;
 
-        const updatedSupplier = await User.findByIdAndUpdate(
-            id,
-            { 
-                isActive,
-                isSupplier: isActive // Update supplier status
-            },
-            { new: true }
-        ).select('-password');
+        console.log('Updating supplier status:', { id, isActive });
 
-        if (!updatedSupplier) {
+        // First check if supplier exists
+        const supplier = await User.findById(id);
+        if (!supplier) {
             return res.status(404).json({ 
                 success: false,
                 message: 'Supplier not found' 
             });
         }
 
+        // Update both isActive and isSupplier status together
+        const updatedSupplier = await User.findByIdAndUpdate(
+            id,
+            { 
+                $set: {
+                    isActive: isActive,
+                    isSupplier: isActive  // Sync both statuses
+                }
+            },
+            { 
+                new: true,
+                runValidators: true 
+            }
+        ).select('-password');
+
+        if (!updatedSupplier) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Failed to update supplier status' 
+            });
+        }
+
+        // Also update any related supplier products if needed
+        if (!isActive) {
+            // Optionally deactivate supplier's products
+            await SupplierProduct.updateMany(
+                { supplierId: id },
+                { $set: { status: 'inactive' } }
+            );
+        }
+
         res.status(200).json({ 
             success: true,
-            supplier: updatedSupplier 
+            supplier: updatedSupplier,
+            message: `Supplier ${isActive ? 'activated' : 'deactivated'} successfully`
         });
+
     } catch (error) {
+        console.error('Error updating supplier status:', error);
         res.status(500).json({ 
             success: false,
             message: 'Error updating supplier status',

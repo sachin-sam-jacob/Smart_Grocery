@@ -38,7 +38,7 @@ const AddSupplier = () => {
         setIsLoading(true);
 
         try {
-            const response = await postData('/api/stockmanager/add-supplier', formData);
+            const response = await postData('/api/stockManagers/add-supplier', formData);
             
             if (response && !response.success) {
                 throw new Error(response.message || 'Failed to add supplier');

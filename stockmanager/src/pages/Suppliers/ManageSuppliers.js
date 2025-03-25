@@ -48,7 +48,7 @@ const ManageSuppliers = () => {
 
     const fetchSuppliers = async () => {
         try {
-            const response = await fetchDataFromApi(`/api/stockmanager/suppliers/${district}`);
+            const response = await fetchDataFromApi(`/api/stockManagers/suppliers/${district}`);
             if (response.success) {
                 setSuppliers(response.suppliers);
             } else {
@@ -69,14 +69,21 @@ const ManageSuppliers = () => {
     const handleStatusChange = async (supplierId, currentStatus) => {
         try {
             setUpdatingId(supplierId);
-            const response = await updateData(`/api/stockmanager/supplier-status/${supplierId}`, {
-                isActive: !currentStatus
+            const newStatus = !currentStatus;
+            
+            const response = await updateData(`/api/stockManagers/supplier-status/${supplierId}`, {
+                isActive: newStatus,
+                isSupplier: newStatus  // Add this to sync both statuses
             });
 
             if (response.success) {
                 setSuppliers(suppliers.map(supplier => 
                     supplier._id === supplierId 
-                        ? { ...supplier, isActive: !currentStatus }
+                        ? { 
+                            ...supplier, 
+                            isActive: newStatus,
+                            isSupplier: newStatus  // Update both statuses in state
+                        }
                         : supplier
                 ));
                 setAlertBox({
