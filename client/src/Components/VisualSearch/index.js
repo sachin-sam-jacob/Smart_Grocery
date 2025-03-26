@@ -199,6 +199,142 @@ const UploadOverlay = styled(Box)`
   }
 `;
 
+const NoResultsIcon = styled(Box)`
+  width: 120px;
+  height: 120px;
+  position: relative;
+  margin-bottom: 24px;
+  
+  .search-circle {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 4px solid #0072FF;
+    border-radius: 50%;
+    top: 20px;
+    left: 20px;
+    opacity: 0.7;
+  }
+  
+  .search-handle {
+    position: absolute;
+    width: 4px;
+    height: 32px;
+    background: #0072FF;
+    bottom: 25px;
+    right: 30px;
+    transform: rotate(-45deg);
+    opacity: 0.7;
+  }
+  
+  .cross-line {
+    position: absolute;
+    background: #DC2626;
+    opacity: 0.8;
+    
+    &.horizontal {
+      width: 40px;
+      height: 4px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    &.vertical {
+      width: 4px;
+      height: 40px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+  }
+
+  .search-circle, .search-handle {
+    animation: fadeInScale 0.5s ease-out forwards;
+  }
+
+  .cross-line {
+    animation: fadeInScale 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+  }
+`;
+
+const NoResultsWrapper = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  border-radius: 16px;
+  margin: 20px 0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+
+  .title {
+    color: #1a202c;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.4s ease-out 0.3s forwards;
+  }
+
+  .message {
+    color: #64748b;
+    margin: 0 0 24px 0;
+    max-width: 300px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.4s ease-out 0.4s forwards;
+  }
+
+  .upload-again-btn {
+    background: linear-gradient(135deg, #00C6FF, #0072FF) !important;
+    color: white !important;
+    padding: 12px 28px !important;
+    border-radius: 24px !important;
+    font-size: 0.95rem !important;
+    text-transform: none !important;
+    box-shadow: 0 4px 12px rgba(0,114,255,0.2) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.4s ease-out 0.5s forwards;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,114,255,0.3) !important;
+      background: linear-gradient(135deg, #0072FF, #00C6FF) !important;
+    }
+
+    .MuiSvgIcon-root {
+      margin-right: 8px;
+      font-size: 20px;
+    }
+  }
+
+  @keyframes slideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
 const VisualSearch = ({ buttonStyle = "default" }) => {
   const [open, setOpen] = useState(false);
   const [image, setImage] = useState(null);
@@ -238,6 +374,13 @@ const VisualSearch = ({ buttonStyle = "default" }) => {
   const handleProductClick = (product) => {
     setOpen(false);
     navigate(`/product/${product._id}`);
+  };
+
+  const handleUploadAgain = () => {
+    setImage(null);
+    setResults([]);
+    setError('');
+    document.getElementById('imageInput').click();
   };
 
   return (
@@ -318,6 +461,30 @@ const VisualSearch = ({ buttonStyle = "default" }) => {
             >
               {error}
             </Typography>
+          )}
+
+          {!loading && image && results.length === 0 && !error && (
+            <NoResultsWrapper>
+              <NoResultsIcon>
+                <div className="search-circle" />
+                <div className="search-handle" />
+                <div className="cross-line horizontal" />
+                <div className="cross-line vertical" />
+              </NoResultsIcon>
+              <Typography className="title">
+                No Similar Products Found
+              </Typography>
+              <Typography className="message">
+                We couldn't find any products matching your image. Try uploading a different image.
+              </Typography>
+              <Button
+                className="upload-again-btn"
+                onClick={handleUploadAgain}
+                startIcon={<IoIosCamera />}
+              >
+                Upload Another Image
+              </Button>
+            </NoResultsWrapper>
           )}
 
           {results.length > 0 && (
