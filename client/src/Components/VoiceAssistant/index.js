@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IconButton, Dialog, DialogContent, Typography, Box } from '@mui/material';
+import { IconButton, Dialog, DialogContent, Typography, Box, Button } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import styled from 'styled-components';
@@ -136,12 +136,35 @@ const HelpDialog = styled(Dialog)`
   }
 `;
 
+const RetryButton = styled(Button)`
+  background: linear-gradient(135deg, #0BDA51, #17863c) !important;
+  color: white !important;
+  padding: 8px 24px !important;
+  border-radius: 24px !important;
+  margin-top: 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-transform: none !important;
+  font-size: 1rem !important;
+  box-shadow: 0 4px 15px rgba(11, 218, 81, 0.2) !important;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(11, 218, 81, 0.3) !important;
+    background: linear-gradient(135deg, #17863c, #0BDA51) !important;
+  }
+
+  .MuiSvgIcon-root {
+    margin-right: 8px;
+  }
+`;
+
 const VoiceAssistant = ({ addToCart, navigate }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [recognitionFailed, setRecognitionFailed] = useState(false);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -162,12 +185,17 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setResponse('Error: Could not understand. Please try again.');
+        setRecognitionFailed(true);
         stopListening();
       };
 
       recognitionRef.current.onend = () => {
         console.log('Speech recognition ended');
         setIsListening(false);
+        if (!transcript) {
+          setRecognitionFailed(true);
+          setResponse('I couldn\'t hear anything. Please try again.');
+        }
       };
     }
 
@@ -176,7 +204,7 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [transcript]);
 
   const startListening = () => {
     try {
@@ -184,6 +212,7 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
       setShowDialog(true);
       setTranscript('');
       setResponse('');
+      setRecognitionFailed(false);
       if (recognitionRef.current) {
         recognitionRef.current.start();
         console.log('Started listening...');
@@ -191,6 +220,7 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
     } catch (error) {
       console.error('Error starting recognition:', error);
       setResponse('Error starting voice recognition. Please try again.');
+      setRecognitionFailed(true);
     }
   };
 
@@ -199,6 +229,13 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
       recognitionRef.current.stop();
     }
     setIsListening(false);
+  };
+
+  const handleRetry = () => {
+    setRecognitionFailed(false);
+    setResponse('');
+    setTranscript('');
+    startListening();
   };
 
   const processVoiceCommand = async (command) => {
@@ -388,7 +425,12 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
         </DialogHeader>
 
         <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ minHeight: '200px' }}>
+          <Box sx={{ 
+            minHeight: '200px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
             {transcript && (
               <ResponseText 
                 variant="body1" 
@@ -405,6 +447,22 @@ const VoiceAssistant = ({ addToCart, navigate }) => {
               >
                 <strong>Assistant:</strong> {response}
               </ResponseText>
+            )}
+            {recognitionFailed && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                mt: 2,
+                animation: 'fadeIn 0.3s ease-out'
+              }}>
+                <RetryButton
+                  onClick={handleRetry}
+                  startIcon={<MicIcon />}
+                  variant="contained"
+                >
+                  Try Again
+                </RetryButton>
+              </Box>
             )}
           </Box>
         </DialogContent>
