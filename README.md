@@ -68,7 +68,7 @@ Smart_Grocery/
 
 1. Clone the repository  
    ```bash
-   git clone https://github.com/<your-username>/smart-grocery.git
+   git clone https://github.com/sachin-sam-jacob/smart-grocery.git
    ```
 
 2. Install backend dependencies  
@@ -85,7 +85,7 @@ Smart_Grocery/
 
 4. Start the development server  
    ```bash
-   npm run dev
+   npm start
    ```
 
 ---
