@@ -118,8 +118,7 @@ This project is licensed under the [MIT License](LICENSE).
 ## 👨‍💼 Author
 
 - 🧑‍💻 **Sachin Sam Jacob**
-- 📧 sachinsamjacob@gmail.com
-- 🔗 [LinkedIn](https://www.linkedin.com/in/sachinsamjacob)
+- 🔗 [LinkedIn](https://www.linkedin.com/in/sachinsamjacob/)
 - 🌐 Live Site: https://smartgrocery.onrender.com/
 
 ---
