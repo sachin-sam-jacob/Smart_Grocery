@@ -34,7 +34,7 @@
 | Database     | MongoDB Atlas         |
 | AI/ML        | OpenAI/Gemini API, Custom Models |
 | Authentication | JWT, Face API       |
-| Hosting      | Render (Backend), Netlify (Frontend) |
+| Hosting      | Render (Frontend,Backend) |
 
 ---
 
